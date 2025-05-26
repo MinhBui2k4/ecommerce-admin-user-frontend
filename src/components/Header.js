@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import{ useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
@@ -19,6 +19,7 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const isLoggedIn = !!localStorage.getItem("authToken");
+  const [avatarError, setAvatarError] = useState(false); // Theo dõi lỗi tải avatar
 
   // Fetch user profile
   useEffect(() => {
@@ -72,7 +73,7 @@ export default function Header() {
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-blue-600">
+              <span className="text-2xl font-bold text-red-600">
                 Tech<span className="text-gray-800">Store</span>
               </span>
             </Link>
@@ -84,8 +85,8 @@ export default function Header() {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  location.pathname === link.href ? "text-blue-600" : "text-gray-600"
+                className={`text-sm font-medium transition-colors hover:text-red-600 ${
+                  location.pathname === link.href ? "text-red-600" : "text-gray-600"
                 }`}
               >
                 {link.label}
@@ -139,16 +140,36 @@ export default function Header() {
                 aria-label="User menu"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               >
-                <span>👤</span>
+                {isLoggedIn && user && user.avatarUrl && !avatarError ? (
+                  <img
+                    src={`http://localhost:8080/api/users/image/${user.avatarUrl}`}
+                    alt="User Avatar"
+                    className="h-6 w-6 rounded-full"
+                    onError={() => setAvatarError(true)} // Chỉ gọi một lần
+                  />
+                ) : (
+                  <span className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center text-sm">
+                    {user?.fullName ? user.fullName[0].toUpperCase() : "U"}
+                  </span>
+                )}
               </Button>
               {isUserMenuOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-lg p-2 z-50">
                   {isLoggedIn && user ? (
                     <>
                       <div className="flex items-center gap-2 p-2">
-                        <div className="h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center">
-                          {user.fullName ? user.fullName[0].toUpperCase() : "U"}
-                        </div>
+                        {user.avatarUrl && !avatarError ? (
+                          <img
+                            src={`http://localhost:8080/api/users/image/${user.avatarUrl}`}
+                            alt="User Avatar"
+                            className="h-8 w-8 rounded-full"
+                            onError={() => setAvatarError(true)} // Chỉ gọi một lần
+                          />
+                        ) : (
+                          <div className="h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center">
+                            {user.fullName ? user.fullName[0].toUpperCase() : "U"}
+                          </div>
+                        )}
                         <div className="flex flex-col">
                           <p className="text-sm font-medium">{user.fullName || "User"}</p>
                           <p className="text-xs text-gray-500">{user.email || "email@example.com"}</p>
@@ -269,7 +290,7 @@ export default function Header() {
                         key={link.href}
                         to={link.href}
                         className={`rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-100 ${
-                          location.pathname === link.href ? "bg-gray-100 text-blue-600" : "text-gray-600"
+                          location.pathname === link.href ? "bg-gray-100 text-red-600" : "text-gray-600"
                         }`}
                         onClick={() => setIsUserMenuOpen(false)}
                       >

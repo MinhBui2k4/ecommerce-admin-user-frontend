@@ -108,3 +108,8 @@ export function REMOVE_FROM_WISHLIST(productId) {
 export function GET_PROFILE() {
     return callApi("/users/profile", "GET", null, null, true);
 }
+
+// Hero Section API
+export function GET_HERO_SECTIONS(params) {
+    return callApi("/hero", "GET", null, params, false);
+}

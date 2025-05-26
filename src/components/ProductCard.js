@@ -31,10 +31,10 @@ export default function ProductCard({ product }) {
             <p className="text-gray-600">${product.price}</p>
             {product.isSale && <span className="text-red-500">Sale!</span>}
             <div className="mt-4 flex justify-between">
-                <Link to={`/product/${product.id}`} className="text-blue-500 hover:underline">
+                <Link to={`/product/${product.id}`} className="text-red-500 hover:underline">
                     View Details
                 </Link>
-                <button onClick={handleAddToCart} className="bg-blue-500 text-white px-4 py-2 rounded">
+                <button onClick={handleAddToCart} className="bg-red-500 text-white px-4 py-2 rounded">
                     Add to Cart
                 </button>
                 <button onClick={handleAddToWishlist} className="bg-gray-500 text-white px-4 py-2 rounded">

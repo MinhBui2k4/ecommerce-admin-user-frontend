@@ -44,7 +44,7 @@ export default function Login() {
                         required
                     />
                 </div>
-                <button type="submit" className="bg-blue-500 text-white px-6 py-2 rounded w-full">
+                <button type="submit" className="bg-red-500 text-white px-6 py-2 rounded w-full">
                     Login
                 </button>
             </form>

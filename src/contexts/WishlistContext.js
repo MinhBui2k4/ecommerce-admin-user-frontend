@@ -8,7 +8,7 @@ export function WishlistProvider({ children }) {
 
   const fetchWishlist = async () => {
     try {
-      const response = await GET_WISHLIST({ pageNumber: 0, pageSize: 100 });
+      const response = await GET_WISHLIST({ pageNumber: 0, pageSize: 8 });
       setWishlistItems(response.content || []);
     } catch (error) {
       console.error("Failed to fetch wishlist:", error);

@@ -76,7 +76,7 @@ export default function Register() {
                         className="w-full p-2 border rounded"
                     />
                 </div>
-                <button type="submit" className="bg-blue-500 text-white px-6 py-2 rounded w-full">
+                <button type="submit" className="bg-red-500 text-white px-6 py-2 rounded w-full">
                     Register
                 </button>
             </form>

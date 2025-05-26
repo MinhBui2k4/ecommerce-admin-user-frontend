@@ -1,4 +1,6 @@
-import { useState } from "react";
+import React from 'react';
+import { useState } from 'react';
+
 import { UPDATE_CART_ITEM, REMOVE_FROM_CART } from "../api/apiService";
 
 export default function CartItem({ item, onUpdate }) {
@@ -43,7 +45,7 @@ export default function CartItem({ item, onUpdate }) {
                     className="w-16 p-2 border rounded"
                     min="1"
                 />
-                <button onClick={handleUpdateQuantity} className="bg-blue-500 text-white px-4 py-2 rounded">
+                <button onClick={handleUpdateQuantity} className="bg-red-500 text-white px-4 py-2 rounded">
                     Update
                 </button>
                 <button onClick={handleRemove} className="bg-red-500 text-white px-4 py-2 rounded">
