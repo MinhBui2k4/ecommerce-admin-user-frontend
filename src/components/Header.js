@@ -109,54 +109,65 @@ export default function Header() {
             </form>
 
             {/* Wishlist */}
-            <Link to="/wishlist" className="relative">
-              <Button variant="ghost" size="icon" aria-label="Wishlist">
-                <span>♥</span>
-                {wishlistItems.length > 0 && (
-                  <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-red-500 text-white">
-                    {wishlistItems.length}
-                  </Badge>
-                )}
-              </Button>
-            </Link>
+                <Link to="/wishlist" className="relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Wishlist"
+                    className="text-2xl" // tăng kích thước icon
+                  >
+                    <span>♥</span>
+                    {wishlistItems.length > 0 && (
+                      <Badge className="absolute -right-1 -top-1 h-6 w-6 text-sm flex items-center justify-center rounded-full bg-red-500 text-white">
+                        {wishlistItems.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
 
-            {/* Cart */}
-            <Link to="/cart" className="relative">
-              <Button variant="ghost" size="icon" aria-label="Shopping Cart">
-                <span>🛒</span>
-                {cartItems.length > 0 && (
-                  <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-red-500 text-white">
-                    {cartItems.length}
-                  </Badge>
-                )}
-              </Button>
-            </Link>
-
-            {/* User Dropdown */}
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="User menu"
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              >
-                {isLoggedIn && user && user.avatarUrl && !avatarError ? (
-                  <img
-                    src={`http://localhost:8080/api/users/image/${user.avatarUrl}`}
-                    alt="User Avatar"
-                    className="h-6 w-6 rounded-full"
-                    onError={() => setAvatarError(true)} // Chỉ gọi một lần
-                  />
-                ) : (
-                  <span className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center text-sm">
-                    {user?.fullName ? user.fullName[0].toUpperCase() : "U"}
-                  </span>
-                )}
-              </Button>
-              {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-lg p-2 z-50">
-                  {isLoggedIn && user ? (
-                    <>
+                {/* Cart */}
+                <Link to="/cart" className="relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Shopping Cart"
+                    className="text-2xl" // tăng kích thước icon
+                  >
+                    <span>🛒</span>
+                    {cartItems.length > 0 && (
+                      <Badge className="absolute -right-1 -top-1 h-6 w-6 text-sm flex items-center justify-center rounded-full bg-red-500 text-white">
+                        {cartItems.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
+              {/* User Menu */}
+              {isLoggedIn && user ? (
+                // Đã đăng nhập -> hiện avatar và dropdown
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="User menu"
+                    className="text-2xl"
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  >
+                    {user.avatarUrl && !avatarError ? (
+                      <img
+                        src={`http://localhost:8080/api/users/image/${user.avatarUrl}`}
+                        alt="User Avatar"
+                        className="h-6 w-6 rounded-full"
+                        onError={() => setAvatarError(true)}
+                      />
+                    ) : (
+                      <span className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center text-sm">
+                        {user.fullName ? user.fullName[0].toUpperCase() : "U"}
+                      </span>
+                    )}
+                  </Button>
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border rounded-md shadow-lg p-2 z-50">
+                      <>
                       <div className="flex items-center gap-2 p-2">
                         {user.avatarUrl && !avatarError ? (
                           <img
@@ -200,31 +211,15 @@ export default function Header() {
                         <span className="mr-2">🕒</span>
                         Lịch sử đặt hàng
                       </Link>
-                      <Link
-                        to="/wishlist"
-                        className="flex items-center p-2 hover:bg-gray-100 rounded"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <span className="mr-2">♥</span>
-                        Sản phẩm yêu thích
-                      </Link>
-                      <Link
-                        to="/cart"
-                        className="flex items-center p-2 hover:bg-gray-100 rounded"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <span className="mr-2">🛒</span>
-                        Giỏ hàng
-                      </Link>
                       <hr className="my-1" />
-                      <Link
+                      {/* <Link
                         to="/settings"
                         className="flex items-center p-2 hover:bg-gray-100 rounded"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <span className="mr-2">⚙️</span>
                         Cài đặt
-                      </Link>
+                      </Link> */}
                       <button
                         onClick={() => {
                           handleLogout();
@@ -236,32 +231,23 @@ export default function Header() {
                         Đăng xuất
                       </button>
                     </>
-                  ) : (
-                    <>
-                      <div className="p-2 font-medium">Tài khoản</div>
-                      <hr className="my-1" />
-                      <Link
-                        to="/login"
-                        className="flex items-center p-2 hover:bg-gray-100 rounded"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <span className="mr-2">👤</span>
-                        Đăng nhập
-                      </Link>
-                      <Link
-                        to="/register"
-                        className="flex items-center p-2 hover:bg-gray-100 rounded"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <span className="mr-2">👤</span>
-                        Đăng ký
-                      </Link>
-                    </>
+
+                    </div>
                   )}
                 </div>
+              ) : (
+                // Chưa đăng nhập -> hiện nút Đăng nhập và Đăng ký
+                <div className="flex items-center gap-2">
+                  <Link to="/login">
+                    <Button variant="default" size="sm">Đăng nhập</Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button variant="default" size="sm">Đăng ký</Button>
+                  </Link>
+                </div>
               )}
-            </div>
 
+            
             {/* Mobile Menu */}
             <div className="md:hidden relative">
               <Button

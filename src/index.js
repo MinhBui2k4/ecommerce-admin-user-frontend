@@ -6,12 +6,17 @@ import reportWebVitals from './reportWebVitals';
 import { RouterProvider } from 'react-router-dom';
 import { createBrowserRouter } from 'react-router-dom';
 import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ProductDetail from './pages/ProductDetail';
-import Cart from './pages/Cart';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import ProductDetail from './pages/products/ProductDetailPage';
+import Cart from './pages/cart/Cart';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Wishlist from './pages/wishlist/WishlistPage';
+import NewsPage from './pages/news/NewsPage';
+import AboutPage from './pages/about/AboutPage';
+import ContactPage from './pages/contact/ContactPage';
+import NewsDetailPage from './pages/news/NewsDetailPage';
 
 const router = createBrowserRouter([
   {
@@ -38,6 +43,28 @@ const router = createBrowserRouter([
         path: "/cart",
         element: <Cart />,
       },
+      {
+        path: "/wishlist",
+        element: <Wishlist />,
+      },
+      {
+        path: "/contact",
+        element: <ContactPage />,
+      },
+      {
+        path: "/news",
+        element: <NewsPage />,
+      },
+      {
+        path: "/news/:id",
+        element: <NewsDetailPage />,
+      },
+      {
+        path: "/about",
+        element: <AboutPage />,
+      },
+
+      
     ],
   },
 ]);

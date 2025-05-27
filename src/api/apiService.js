@@ -3,7 +3,8 @@ import axiosInstance from "./axiosConfig";
 function callApi(endpoint, method = "GET", body, params, requireAuth = true) {
     const token = localStorage.getItem("authToken");
 
-    const queryString = new URLSearchParams(params).toString();
+    // Chỉ tạo queryString nếu params là object hợp lệ
+    const queryString = params && typeof params === "object" ? new URLSearchParams(params).toString() : "";
     const url = `${endpoint}${queryString ? `?${queryString}` : ''}`;
 
     const config = {
@@ -12,7 +13,7 @@ function callApi(endpoint, method = "GET", body, params, requireAuth = true) {
         headers: {
             "Content-Type": "application/json",
         },
-        data: body ? body : null,
+        data: body || null,
     };
 
     if (requireAuth && token) {
@@ -30,6 +31,7 @@ function callApi(endpoint, method = "GET", body, params, requireAuth = true) {
         });
 }
 
+
 // Public APIs
 export function GET_ALL_PRODUCTS(params) {
     return callApi("/products", "GET", null, params, false);
@@ -38,6 +40,29 @@ export function GET_ALL_PRODUCTS(params) {
 export function GET_PRODUCT_BY_ID(id) {
     return callApi(`/products/${id}`, "GET", null, null, false);
 }
+
+export function GET_ALL_NEWS(params) {
+    return callApi("/news", "GET", null, params, false);
+}
+
+export function GET_NEWS_BY_ID(id) {
+    return callApi(`/news/${id}`, "GET", null, null, false);
+}
+
+export function POST_CONTACT(data) {
+    return callApi("/contacts", "POST", data, null, false);
+}
+
+export function GET_ALL_BRANDS(params) {
+    return callApi("/admin/brands", "GET", null, params, false);
+}
+
+export function GET_ALL_CATEGORIES(params) {
+    return callApi("/admin/categories", "GET", null, params, false);
+}
+
+
+
 
 // Auth APIs
 export function LOGIN(body) {
@@ -48,7 +73,7 @@ export function LOGIN(body) {
     })
         .then((response) => response.data)
         .catch((error) => {
-            console.error("Login error:", error);
+            console.error("Login error:", error.response?.data || error.message);
             throw error;
         });
 }
@@ -65,51 +90,51 @@ export function REGISTER(body) {
     })
         .then((response) => response.data)
         .catch((error) => {
-            console.error("Registration error:", error);
+            console.error("Registration error:", error.response?.data || error.message);
             throw error;
         });
 }
 
+// User APIs
+export function GET_PROFILE() {
+    return callApi("/users/profile", "GET", null, {}, true);
+}
+
 // Cart APIs
 export function GET_CART() {
-    return callApi("/users/cart", "GET", null, null, true);
+    return callApi("/users/cart", "GET", null, {}, true);
 }
 
 export function ADD_TO_CART(data) {
-    return callApi("/users/cart/items", "POST", data, null, true);
+    return callApi("/users/cart/items", "POST", data, {}, true);
 }
 
 export function UPDATE_CART_ITEM(itemId, data) {
-    return callApi(`/users/cart/items/${itemId}`, "PUT", data, null, true);
+    return callApi(`/users/cart/items/${itemId}`, "PUT", data, {}, true);
 }
 
 export function REMOVE_FROM_CART(itemId) {
-    return callApi(`/users/cart/items/${itemId}`, "DELETE", null, null, true);
+    return callApi(`/users/cart/items/${itemId}`, "DELETE", null, {}, true);
 }
 
 export function CLEAR_CART() {
-    return callApi("/users/cart", "DELETE", null, null, true);
+    return callApi("/users/cart", "DELETE", null, {}, true);
 }
 
 // Wishlist APIs
 export function ADD_TO_WISHLIST(data) {
-    return callApi("/users/wishlist", "POST", data, null, true);
+    return callApi("/users/wishlist", "POST", data, {}, true);
 }
 
-export function GET_WISHLIST(params) {
+export function GET_WISHLIST(params = {}) {
     return callApi("/users/wishlist", "GET", null, params, true);
 }
 
 export function REMOVE_FROM_WISHLIST(productId) {
-    return callApi(`/users/wishlist/${productId}`, "DELETE", null, null, true);
-}
-
-// User Profile API
-export function GET_PROFILE() {
-    return callApi("/users/profile", "GET", null, null, true);
+    return callApi(`/users/wishlist/${productId}`, "DELETE", null, {}, true);
 }
 
 // Hero Section API
-export function GET_HERO_SECTIONS(params) {
+export function GET_HERO_SECTIONS(params = {}) {
     return callApi("/hero", "GET", null, params, false);
 }

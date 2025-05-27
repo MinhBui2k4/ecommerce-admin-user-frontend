@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
-import { Card, CardContent, CardFooter } from "../../components/ui/Card";
+import Card, { CardContent, CardFooter } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { useCart } from "../../contexts/CartContext";
 import { useWishlist } from "../../contexts/WishlistContext";
@@ -55,7 +55,12 @@ export default function FeaturedProducts() {
       }
       fetchWishlist();
     } catch (error) {
-      toast.error("Không thể cập nhật danh sách yêu thích");
+      const errorMessage = error.response?.data?.error || "Không thể cập nhật danh sách yêu thích";
+      if (errorMessage === "Sản phẩm đã có trong danh sách yêu thích") {
+        toast.error("Sản phẩm đã có trong danh sách yêu thích");
+      } else {
+        toast.error(errorMessage);
+      }
     }
   };
 
@@ -76,7 +81,7 @@ export default function FeaturedProducts() {
             className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="relative pt-4">
-            {product.new && (
+               {product.new && (
               <Badge
                 variant="info"
                 className="absolute left-2 top-2 z-10 rounded-md bg-blue-500 px-2 py-1 text-white shadow-md"
@@ -94,7 +99,7 @@ export default function FeaturedProducts() {
                 Giảm giá
               </Badge>
             )}
-                <Link to={`/product/${product.id}`}>
+              <Link to={`/product/${product.id}`}>
                 <div className="relative mx-auto h-48 w-48">
                   <img
                     src={`http://localhost:8080/api/products/image/${product.image}`}
@@ -111,7 +116,7 @@ export default function FeaturedProducts() {
               <Link to={`/product/${product.id}`}>
                 <h3 className="mb-1 text-base font-semibold hover:text-red-600 md:text-lg">{product.name}</h3>
               </Link>
-              <p className="mb-2 text-sm text-gray-600 line-clamp-2">{product.description}</p>
+              <p className="mb-2 text-sm text-gray-600 line-clamp-1">{product.description}</p>
               <div className="mb-2 flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <span

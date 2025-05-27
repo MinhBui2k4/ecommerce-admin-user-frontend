@@ -64,8 +64,16 @@ export default function HeroSection() {
               src={slide.image}
               alt={slide.title}
               className="object-cover w-full h-full"
+              loading="eager"
               onError={(e) => {
+                e.target.onerror = null; // Prevent infinite loop
                 e.target.src = "/images/hero-placeholder.jpg";
+              }}
+              style={{
+                objectFit: "cover",
+                imageRendering: "auto",
+                maxWidth: "100%",
+                height: "100%"
               }}
             />
             <div className="absolute inset-0 bg-black/40">
