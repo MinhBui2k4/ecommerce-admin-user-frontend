@@ -29,8 +29,8 @@ export function TabsTrigger({ value, children, activeTab, setActiveTab }) {
       className={classNames(
         "px-4 py-2 text-sm font-medium focus:outline-none",
         activeTab === value
-          ? "border-b-2 border-blue-600 text-blue-600"
-          : "text-gray-600 hover:text-blue-600"
+          ? "border-b-2 border-red-600 text-red-600"
+          : "text-gray-600 hover:text-red-600"
       )}
       onClick={() => setActiveTab(value)}
     >

@@ -1,8 +1,12 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/Select";
 import { Button } from "../../components/ui/Button";
+import { useState } from "react";
 
 export default function ProductSort({ onSortChange, totalItems }) {
+  const [selectedValue, setSelectedValue] = useState("newest");
+
   const handleSortChange = (value) => {
+    setSelectedValue(value);
     let sortBy = "id";
     let sortOrder = "asc";
     switch (value) {
@@ -28,7 +32,7 @@ export default function ProductSort({ onSortChange, totalItems }) {
     <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
       <div className="flex items-center">
         <span className="mr-2 text-sm font-semibold">Sắp xếp theo:</span>
-        <Select defaultValue="newest" onValueChange={handleSortChange}>
+        <Select value={selectedValue} onValueChange={handleSortChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Mới nhất" />
           </SelectTrigger>

@@ -18,7 +18,10 @@ import AboutPage from './pages/about/AboutPage';
 import ContactPage from './pages/contact/ContactPage';
 import NewsDetailPage from './pages/news/NewsDetailPage';
 import ProductsPage from './pages/ProductsPage';
-import SearchPage from './pages/SearchPage';
+import SearchPage from './pages/products/SearchPage';
+import ProfilePage from './pages/profile/ProfilePage';
+import OrderHistoryPage from './pages/order/OrderHistoryPage';
+import OrderDetailPage from './pages/order/OrderDetailPage';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -28,6 +31,7 @@ const router = createBrowserRouter([
         index: true,
         element: <Home />,
       },
+      // Auth
       {
         path: "/login",
         element: <Login />,
@@ -36,22 +40,35 @@ const router = createBrowserRouter([
         path: "/register",
         element: <Register />,
       },
+      // Products
       {
         path: "/product/:id",
         element: <ProductDetail />,
       },
+       {
+        path: "/products",
+        element: <ProductsPage />,
+      },
+      {
+        path: "/search",
+        element: <SearchPage />,
+      },
+      // Cart
       {
         path: "/cart",
         element: <Cart />,
       },
+      // Wishlist
       {
         path: "/wishlist",
         element: <Wishlist />,
       },
+      // Contact
       {
         path: "/contact",
         element: <ContactPage />,
       },
+      // News
       {
         path: "/news",
         element: <NewsPage />,
@@ -60,19 +77,25 @@ const router = createBrowserRouter([
         path: "/news/:id",
         element: <NewsDetailPage />,
       },
+      // About
       {
         path: "/about",
         element: <AboutPage />,
       },
+      // Profile
       {
-        path: "/products",
-        element: <ProductsPage />,
+        path: "/profile",
+        element: <ProfilePage />,
+      },
+      // Order
+      {
+        path: "/orders",
+        element: <OrderHistoryPage />,
       },
       {
-        path: "/search",
-        element: <SearchPage />,
+        path: "/orders/:id",
+        element: <OrderDetailPage />,
       },
-      
     ],
   },
 ]);

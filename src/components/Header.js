@@ -212,14 +212,6 @@ export default function Header() {
                       <span className="mr-2 text-xl">📦</span>
                       Đơn hàng của tôi
                     </Link>
-                    <Link
-                      to="/orders/history"
-                      className="flex items-center p-2 hover:bg-gray-100 rounded"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <span className="mr-2 text-xl">🕒</span>
-                      Lịch sử đặt hàng
-                    </Link>
                     <hr className="my-1" />
                     <button
                       onClick={() => {

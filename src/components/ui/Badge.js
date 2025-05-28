@@ -6,6 +6,13 @@ export function Badge({ variant = "default", className, children, ...props }) {
     destructive: "bg-red-500 text-white",
     info: "bg-blue-500 text-white",
     success: "bg-green-500 text-white",
+
+    processing: "bg-blue-500 text-white",
+    shipped: "bg-orange-500 text-white",
+    completed: "bg-green-500 text-white",
+    cancelled: "bg-red-500 text-white",
+    ordered: "bg-gray-500 text-white",
+    confirmed: "bg-purple-500 text-white",
   };
 
   const classes = classNames(

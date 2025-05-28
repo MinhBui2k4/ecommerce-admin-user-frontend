@@ -34,7 +34,7 @@ export default function ProductDetailPage() {
     setLoading(true);
     Promise.all([
       GET_PRODUCT_BY_ID(id),
-      GET_ALL_PRODUCTS({ pageNumber: 0, pageSize: 4 }),
+      GET_ALL_PRODUCTS({ pageNumber: 0, pageSize: 5 }),
     ])
       .then(([productData, allProducts]) => {
         setProduct({

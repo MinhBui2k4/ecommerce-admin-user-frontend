@@ -1,30 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import classNames from "classnames";
 
-export function Select({ defaultValue, onValueChange, children }) {
-  const [value, setValue] = useState(defaultValue);
+export function Select({ defaultValue, value: controlledValue, onValueChange, children }) {
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const value = controlledValue !== undefined ? controlledValue : internalValue;
+
+  useEffect(() => {
+    setInternalValue(defaultValue);
+  }, [defaultValue]);
 
   const handleChange = (newValue) => {
-    setValue(newValue);
+    setInternalValue(newValue);
     onValueChange?.(newValue);
+    setIsOpen(false);
   };
 
   return (
     <div className="relative">
       {React.Children.map(children, (child) =>
-        React.cloneElement(child, { value, onChange: handleChange })
+        React.cloneElement(child, { 
+          value, 
+          onChange: handleChange,
+          isOpen,
+          setIsOpen 
+        })
       )}
     </div>
   );
 }
 
-export function SelectTrigger({ className, children, value }) {
+export function SelectTrigger({ className, children, value, setIsOpen }) {
   return (
     <div
       className={classNames(
         "flex h-10 items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm",
         className
       )}
+      onClick={() => setIsOpen(prev => !prev)}
     >
       {children || value}
       <span className="ml-2">▼</span>
@@ -36,7 +50,9 @@ export function SelectValue({ placeholder }) {
   return <span>{placeholder}</span>;
 }
 
-export function SelectContent({ children, value, onChange }) {
+export function SelectContent({ children, value, onChange, isOpen }) {
+  if (!isOpen) return null;
+  
   return (
     <div className="absolute z-10 mt-1 w-full rounded-md border bg-white shadow-lg">
       {React.Children.map(children, (child) =>

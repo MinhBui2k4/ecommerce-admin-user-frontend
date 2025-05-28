@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Checkbox } from "../../components/ui/Checkbox";
-import { Label } from "../../components/ui/Label";
+import { Label } from "../../components/ui/Label";  
 import { Button } from "../../components/ui/Button";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../../components/ui/Accordion";
 import { GET_ALL_BRANDS, GET_ALL_CATEGORIES } from "../../api/apiService";
@@ -24,7 +24,7 @@ export default function ProductFilter({ onFilterChange, onReset }) {
     { label: "10 - 15 triệu", start: 10000000, end: 15000000 },
     { label: "15 - 20 triệu", start: 15000000, end: 20000000 },
     { label: "20 - 30 triệu", start: 20000000, end: 30000000 },
-    { label: "Trên 30 triệu", start: 30000000, end: 1000000000 },
+    { label: "Trên 30 triệu", start: 30000000, end: null },
   ];
 
   useEffect(() => {
@@ -59,7 +59,6 @@ export default function ProductFilter({ onFilterChange, onReset }) {
       categoryId: filters.categoryId,
       brandId: filters.brandId,
     };
-    // Only include non-null values
     const validFilters = Object.fromEntries(
       Object.entries(filterParams).filter(([_, v]) => v !== null)
     );
@@ -82,7 +81,6 @@ export default function ProductFilter({ onFilterChange, onReset }) {
       <h2 className="mb-4 text-lg font-semibold md:text-xl">Bộ lọc</h2>
 
       <Accordion type="multiple" defaultValue={["price", "category", "brand"]}>
-        {/* Price Range */}
         <AccordionItem value="price">
           <AccordionTrigger>Khoảng giá</AccordionTrigger>
           <AccordionContent>
@@ -101,7 +99,6 @@ export default function ProductFilter({ onFilterChange, onReset }) {
           </AccordionContent>
         </AccordionItem>
 
-        {/* Categories */}
         <AccordionItem value="category">
           <AccordionTrigger>Danh mục</AccordionTrigger>
           <AccordionContent>
@@ -120,7 +117,6 @@ export default function ProductFilter({ onFilterChange, onReset }) {
           </AccordionContent>
         </AccordionItem>
 
-        {/* Brands */}
         <AccordionItem value="brand">
           <AccordionTrigger>Thương hiệu</AccordionTrigger>
           <AccordionContent>

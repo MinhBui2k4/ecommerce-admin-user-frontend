@@ -70,6 +70,57 @@ export function GET_ALL_CATEGORIES(params = {}) {
     return callApi("/admin/categories", "GET", null, params, false);
 }
 
+
+// Order APIs
+// Order APIs
+export function GET_USER_ORDERS(params) {
+    return callApi("/orders", "GET", null, params, true);
+}
+
+export function GET_ORDERS_BY_STATUS(status, params) {
+    return callApi(`/orders/status/${status}`, "GET", null, params, true);
+}
+
+export function GET_ORDER_BY_ID(id) {
+    return callApi(`/orders/${id}`, "GET", null, null, true);
+}
+
+export function CANCEL_ORDER(id) {
+    return callApi(`/orders/${id}/cancel`, "PUT", null, null, true);
+}
+
+export function GET_PAYMENT_METHOD(id) {
+    return callApi(`/admin/payment-methods/${id}`, "GET", null, null, false);
+}
+
+export function GET_ADDRESS(id) {
+    return callApi(`/users/addresses/${id}`, "GET", null, null, true);
+}
+
+
+// User APIs
+export function GET_PROFILE() {
+    return callApi("/users/profile", "GET", null, {}, true);
+}
+
+export function UPDATE_PROFILE(formData) {
+    return axiosInstance.put("/users/profile", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
+        },
+    })
+        .then((response) => response.data)
+        .catch((error) => {
+            console.error("Update profile error:", error.response?.data || error.message);
+            throw error;
+        });
+}
+
+export function CHANGE_PASSWORD(data) {
+    return callApi("/users/change-password", "POST", data, {}, true);
+}
+
 // Auth APIs
 export function LOGIN(body) {
     return axiosInstance.post("/auth/login", body, {
@@ -101,10 +152,6 @@ export function REGISTER(body) {
         });
 }
 
-// User APIs
-export function GET_PROFILE() {
-    return callApi("/users/profile", "GET", null, {}, true);
-}
 
 // Cart APIs
 export function GET_CART() {
