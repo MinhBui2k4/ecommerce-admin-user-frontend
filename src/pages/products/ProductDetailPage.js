@@ -153,9 +153,9 @@ export default function ProductDetailPage() {
                 e.target.src = "/images/product-placeholder.jpg";
               }}
             />
-            {product.new && <Badge className="absolute left-4 top-4 bg-blue-500 hover:bg-blue-600">Mới</Badge>}
+            {product.new && <Badge variant="info" className="absolute left-4 top-4 px-3 py-2 text-base">Mới</Badge>}
             {product.sale && (
-              <Badge variant="destructive" className="absolute right-4 top-4 bg-red-500 hover:bg-red-600">
+              <Badge variant="destructive" className="absolute right-4 top-4 px-3 py-2 text-base">
                 -{calculateDiscountPercentage(product.price, product.oldPrice)}%
               </Badge>
             )}

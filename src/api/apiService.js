@@ -33,6 +33,7 @@ function callApi(endpoint, method = "GET", body, params, requireAuth = true) {
 
 
 // Public APIs
+// Product APIs
 export function GET_ALL_PRODUCTS(params) {
     return callApi("/products", "GET", null, params, false);
 }
@@ -41,6 +42,11 @@ export function GET_PRODUCT_BY_ID(id) {
     return callApi(`/products/${id}`, "GET", null, null, false);
 }
 
+export function GET_PRODUCTS_BY_SEARCH(params) {
+    return callApi("/products/search", "GET", null, params, false);
+}
+
+// News APIs
 export function GET_ALL_NEWS(params) {
     return callApi("/news", "GET", null, params, false);
 }
@@ -49,20 +55,20 @@ export function GET_NEWS_BY_ID(id) {
     return callApi(`/news/${id}`, "GET", null, null, false);
 }
 
+// Contact APIs
 export function POST_CONTACT(data) {
     return callApi("/contacts", "POST", data, null, false);
 }
 
-export function GET_ALL_BRANDS(params) {
+// Brand APIs
+export function GET_ALL_BRANDS(params = {}) {
     return callApi("/admin/brands", "GET", null, params, false);
 }
 
-export function GET_ALL_CATEGORIES(params) {
+// Category APIs
+export function GET_ALL_CATEGORIES(params = {}) {
     return callApi("/admin/categories", "GET", null, params, false);
 }
-
-
-
 
 // Auth APIs
 export function LOGIN(body) {

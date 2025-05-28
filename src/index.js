@@ -17,7 +17,8 @@ import NewsPage from './pages/news/NewsPage';
 import AboutPage from './pages/about/AboutPage';
 import ContactPage from './pages/contact/ContactPage';
 import NewsDetailPage from './pages/news/NewsDetailPage';
-
+import ProductsPage from './pages/ProductsPage';
+import SearchPage from './pages/SearchPage';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -63,7 +64,14 @@ const router = createBrowserRouter([
         path: "/about",
         element: <AboutPage />,
       },
-
+      {
+        path: "/products",
+        element: <ProductsPage />,
+      },
+      {
+        path: "/search",
+        element: <SearchPage />,
+      },
       
     ],
   },
