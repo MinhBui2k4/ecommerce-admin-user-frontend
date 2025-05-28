@@ -72,7 +72,6 @@ export function GET_ALL_CATEGORIES(params = {}) {
 
 
 // Order APIs
-// Order APIs
 export function GET_USER_ORDERS(params) {
     return callApi("/orders", "GET", null, params, true);
 }
@@ -89,14 +88,45 @@ export function CANCEL_ORDER(id) {
     return callApi(`/orders/${id}/cancel`, "PUT", null, null, true);
 }
 
+export function CREATE_ORDER_FROM_CART(data) {
+    return callApi("/orders/from-cart", "POST", null, data, true);
+}
+
 export function GET_PAYMENT_METHOD(id) {
     return callApi(`/admin/payment-methods/${id}`, "GET", null, null, false);
+}
+
+export function GET_ALL_PAYMENT_METHODS(params = {}) {
+    return callApi("/admin/payment-methods", "GET", null, params, false);
+}
+
+export function GET_SHIPPING_ADDRESS(id) {
+    return callApi(`/users/addresses/${id}`, "GET", null, null, true);
+}
+
+export function GET_USER_ADDRESSES(params) {
+    return callApi("/users/addresses", "GET", null, params, true);
+}
+
+export function CREATE_ADDRESS(data) {
+    return callApi("/users/addresses", "POST", data, null, true);
+}
+
+export function UPDATE_ADDRESS(id, data) {
+    return callApi(`/users/addresses/${id}`, "PUT", data, null, true);
+}
+
+export function DELETE_ADDRESS(id) {
+    return callApi(`/users/addresses/${id}`, "DELETE", null, null, true);
+}
+
+export function SET_DEFAULT_ADDRESS(id) {
+    return callApi(`/users/addresses/${id}/default`, "PUT", null, null, true);
 }
 
 export function GET_ADDRESS(id) {
     return callApi(`/users/addresses/${id}`, "GET", null, null, true);
 }
-
 
 // User APIs
 export function GET_PROFILE() {

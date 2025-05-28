@@ -22,6 +22,11 @@ import SearchPage from './pages/products/SearchPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import OrderHistoryPage from './pages/order/OrderHistoryPage';
 import OrderDetailPage from './pages/order/OrderDetailPage';
+import CheckoutPage from './pages/checkout/CheckoutPage';
+import PrivacyPolicyPage from './pages/policy/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/policy/TermsOfServicePage';
+import ReturnPolicyPage from './pages/policy/ReturnPolicyPage';
+import UnauthorizedPage from './pages/auth/UnauthorizedPage';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -96,7 +101,30 @@ const router = createBrowserRouter([
         path: "/orders/:id",
         element: <OrderDetailPage />,
       },
+      // Checkout
+      {
+        path: "/checkout",
+        element: <CheckoutPage />,
+      },
+      // Policy
+      {
+        path: "/policy/privacy",
+        element: <PrivacyPolicyPage />,
+      },
+      {
+        path: "/policy/terms",
+        element: <TermsOfServicePage />,
+      },
+      {
+        path: "/policy/return",
+        element: <ReturnPolicyPage />,
+      },
+      {
+        path: "/unauthorized",
+        element: <UnauthorizedPage />,
+      },
     ],
+
   },
 ]);
 
