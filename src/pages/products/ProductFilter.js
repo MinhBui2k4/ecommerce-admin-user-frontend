@@ -24,7 +24,7 @@ export default function ProductFilter({ onFilterChange, onReset }) {
     { label: "10 - 15 triệu", start: 10000000, end: 15000000 },
     { label: "15 - 20 triệu", start: 15000000, end: 20000000 },
     { label: "20 - 30 triệu", start: 20000000, end: 30000000 },
-    { label: "Trên 30 triệu", start: 30000000, end: null },
+    { label: "Trên 30 triệu", start: 30000000, end: 10000000000 },
   ];
 
   useEffect(() => {
@@ -138,7 +138,7 @@ export default function ProductFilter({ onFilterChange, onReset }) {
 
       <div className="mt-6 flex space-x-2">
         <Button className="flex-1" onClick={handleApplyFilters}>Áp dụng</Button>
-        <Button variant="outline" className="flex-1" onClick={handleResetFilters}>Đặt lại</Button>
+        <Button variant="blue" className="flex-1" onClick={handleResetFilters}>Đặt lại</Button>
       </div>
     </div>
   );

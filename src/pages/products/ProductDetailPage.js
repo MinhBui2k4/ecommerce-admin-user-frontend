@@ -4,12 +4,11 @@ import { Button } from "../../components/ui/Button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/Tabs";
 import { Separator } from "../../components/ui/Separator";
 import { Badge } from "../../components/ui/Badge";
-import  Card,{ CardContent } from "../../components/ui/Card";
+import Card, { CardContent } from "../../components/ui/Card";
 import { useCart } from "../../contexts/CartContext";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { GET_PRODUCT_BY_ID, GET_ALL_PRODUCTS, ADD_TO_CART, ADD_TO_WISHLIST, REMOVE_FROM_WISHLIST } from "../../api/apiService";
 import { toast } from "react-toastify";
-
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -22,7 +21,13 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+    if (!price || isNaN(price)) return "0 ₫";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
   const calculateDiscountPercentage = (price, oldPrice) => {
@@ -34,27 +39,27 @@ export default function ProductDetailPage() {
     setLoading(true);
     Promise.all([
       GET_PRODUCT_BY_ID(id),
-      GET_ALL_PRODUCTS({ pageNumber: 0, pageSize: 5 }),
+      GET_PRODUCT_BY_ID(id).then((productData) =>
+        GET_ALL_PRODUCTS({ brandId: productData.brandId, pageNumber: 0, pageSize: 5 })
+      ),
     ])
-      .then(([productData, allProducts]) => {
+      .then(([productData, relatedProductsData]) => {
+        console.log("Product data:", productData);
+        console.log("Related products data:", relatedProductsData);
         setProduct({
           ...productData,
-          category: "Điện thoại", // Giả lập
-          brand: "Oppo", // Giả lập
-          sku: productData.sku || `P-${productData.id}`, // Giả lập
+          sku: productData.sku || `P-${productData.id}`,
           availability: productData.availability ? "Còn hàng" : "Hết hàng",
           maxQuantity: productData.quantity,
-          reviews: 120, // Giả lập
-          images: productData.images.length > 0 ? productData.images : [productData.image],
-          description_long: productData.description, // Giả lập
+          images: [productData.image, ...(productData.images || [])],
+          description_long: productData.description,
         });
         setRelatedProducts(
-          allProducts.content
+          relatedProductsData.content
             .filter((item) => item.id !== parseInt(id))
             .slice(0, 4)
             .map((item) => ({
               ...item,
-              reviews: 88, // Giả lập
             }))
         );
         setLoading(false);
@@ -92,7 +97,7 @@ export default function ProductDetailPage() {
         await ADD_TO_WISHLIST({ productId: product.id });
         toast.success(`Đã thêm ${product.name} vào danh sách yêu thích`);
       }
-      fetchWishlist();
+      fetchWishlist(0, 1000);
     } catch (error) {
       toast.error("Không thể cập nhật danh sách yêu thích");
     }
@@ -101,6 +106,12 @@ export default function ProductDetailPage() {
   const handleBuyNow = () => {
     handleAddToCart();
     navigate("/checkout");
+  };
+
+  // Hàm để lấy URL ảnh đúng
+  const getImageUrl = (image, isPrimary = false) => {
+    const endpoint = isPrimary ? "image" : "images";
+    return `http://localhost:8080/api/products/${endpoint}/${image}`;
   };
 
   if (loading) {
@@ -135,8 +146,6 @@ export default function ProductDetailPage() {
         <span className="mx-2">›</span>
         <Link to="/products" className="hover:text-blue-600">Sản phẩm</Link>
         <span className="mx-2">›</span>
-        <Link to={`/products?category=${product.category}`} className="hover:text-blue-600">{product.category}</Link>
-        <span className="mx-2">›</span>
         <span className="text-gray-700">{product.name}</span>
       </div>
 
@@ -146,10 +155,11 @@ export default function ProductDetailPage() {
         <div>
           <div className="relative mb-4 aspect-square overflow-hidden rounded-lg border bg-white">
             <img
-              src={`http://localhost:8080/api/products/image/${product.image}`}
+              src={getImageUrl(product.images[selectedImage], selectedImage === 0)}
               alt={product.name}
               className="object-contain p-4 w-full h-full"
               onError={(e) => {
+                console.error(`Failed to load image: ${product.images[selectedImage]}`);
                 e.target.src = "/images/product-placeholder.jpg";
               }}
             />
@@ -169,20 +179,21 @@ export default function ProductDetailPage() {
                 }`}
                 onClick={() => setSelectedImage(index)}
               >
-                {/* <img
-                  src={`http://localhost:8080/api/products/image/${product.images[selectedImage]}`}
+                <img
+                  src={getImageUrl(image, index === 0)}
                   alt={`${product.name} - Ảnh ${index + 1}`}
                   className="object-contain p-2 w-full h-full"
                   onError={(e) => {
+                    console.error(`Failed to load thumbnail: ${image}`);
                     e.target.src = "/images/product-placeholder.jpg";
                   }}
-                /> */}
+                />
               </button>
             ))}
           </div>
         </div>
 
-        {/* Product Info */}
+         {/* Product Info */}
         <div>
           <h1 className="mb-2 text-2xl font-bold md:text-3xl">{product.name}</h1>
 
@@ -196,7 +207,7 @@ export default function ProductDetailPage() {
                   ★
                 </span>
               ))}
-              <span className="ml-2 text-sm text-gray-600">({product.rating} - {product.reviews} đánh giá)</span>
+              <span className="ml-2 text-sm text-gray-600">({product.rating} - {product.review || 0} đánh giá)</span>
             </div>
             <Separator orientation="vertical" className="mx-4 h-5" />
             <span className="text-sm text-gray-600">SKU: {product.sku}</span>
@@ -220,7 +231,7 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="mb-6">
-            <p className="text-gray-600 line-clamp-2" >{product.description}</p>
+            <p className="text-gray-600 line-clamp-2">{product.description}</p>
           </div>
 
           {/* Quantity */}
@@ -259,7 +270,7 @@ export default function ProductDetailPage() {
 
           {/* Actions */}
           <div className="mb-6 flex items-center gap-4 flex-wrap">
-            <Button className="flex-1 "  onClick={handleAddToCart} disabled={product.availability !== "Còn hàng"}>
+            <Button className="flex-1" onClick={handleAddToCart} disabled={product.availability !== "Còn hàng"}>
               <span className="mr-2">🛒</span> Thêm vào giỏ
             </Button>
             <Button
@@ -281,18 +292,18 @@ export default function ProductDetailPage() {
               onClick={handleToggleWishlist}
             >
               <svg
-                  className={
-                    wishlistItems.some((item) => item.productId === product.id)
-                      ? "fill-red-500 stroke-red-500 h-5 w-5"
-                      : "fill-white stroke-gray-500 h-5 w-5 group-hover:fill-gray-600 group-hover:stroke-gray-600"
-                  }
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                  />
-                </svg>
+                className={
+                  wishlistItems.some((item) => item.productId === product.id)
+                    ? "fill-red-500 stroke-red-500 h-5 w-5"
+                    : "fill-white stroke-gray-500 h-5 w-5 group-hover:fill-gray-600 group-hover:stroke-gray-600"
+                }
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                />
+              </svg>
             </Button>
           </div>
 
@@ -327,9 +338,9 @@ export default function ProductDetailPage() {
       <div className="mt-12">
         <Tabs defaultValue="description">
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="description" activeTab="description">Mô tả sản phẩm</TabsTrigger>
+            <TabsTrigger value="description">Mô tả sản phẩm</TabsTrigger>
           </TabsList>
-          <TabsContent value="description" activeTab="description" className="mt-4">
+          <TabsContent value="description" className="mt-4">
             <Card>
               <CardContent className="p-4 md:p-6">
                 <p className="text-gray-600">{product.description_long}</p>
@@ -342,21 +353,24 @@ export default function ProductDetailPage() {
       {/* Related Products */}
       <div className="mt-12">
         <h2 className="mb-6 text-xl font-bold md:text-2xl">Sản phẩm liên quan</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {relatedProducts.map((product) => (
-            <Card
-              key={product.id}
-              className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="relative pt-4">
-                {product.new && (
-                  <Badge
-                    variant="info"
-                    className="absolute left-2 top-2 z-10 rounded-md bg-blue-500 px-2 py-1 text-white shadow-md"
-                  >
-                    Mới
-                  </Badge>
-                )}
+        {relatedProducts.length === 0 ? (
+          <p className="text-gray-600">Không có sản phẩm liên quan.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedProducts.map((product) => (
+              <Card
+                key={product.id}
+                className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              >
+                <div className="relative pt-4">
+                  {product.new && (
+                    <Badge
+                      variant="info"
+                      className="absolute left-2 top-2 z-10 rounded-md bg-blue-500 px-2 py-1 text-white shadow-md"
+                    >
+                      Mới
+                    </Badge>
+                  )}
                   {product.sale && (
                     <Badge
                       variant="destructive"
@@ -365,46 +379,47 @@ export default function ProductDetailPage() {
                       Giảm giá
                     </Badge>
                   )}
-
-                <Link to={`/product/${product.id}`}>
-                  <div className="relative mx-auto h-48 w-48">
-                    <img
-                      src={`http://localhost:8080/api/products/image/${product.image}`}
-                      alt={product.name}
-                      className="object-contain w-full h-full transition-transform duration-300 hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = "/images/product-placeholder.jpg";
-                      }}
-                    />
+                  <Link to={`/product/${product.id}`}>
+                    <div className="relative mx-auto h-48 w-48">
+                      <img
+                        src={getImageUrl(product.image, true)}
+                        alt={product.name}
+                        className="object-contain w-full h-full transition-transform duration-300 hover:scale-105"
+                        onError={(e) => {
+                          console.error(`Failed to load related product image: ${product.image}`);
+                          e.target.src = "/images/product-placeholder.jpg";
+                        }}
+                      />
+                    </div>
+                  </Link>
+                </div>
+                <CardContent className="p-4">
+                  <Link to={`/product/${product.id}`}>
+                    <h3 className="mb-1 text-base font-semibold hover:text-red-600 md:text-lg">{product.name}</h3>
+                  </Link>
+                  <p className="mb-2 text-sm text-gray-600 line-clamp-2">{product.description}</p>
+                  <div className="mb-2 flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <span
+                        key={i}
+                        className={`h-4 w-4 ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-200"}`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                    <span className="ml-2 text-sm text-gray-600">({product.review })</span>
                   </div>
-                </Link>
-              </div>
-              <CardContent className="p-4">
-                <Link to={`/product/${product.id}`}>
-                  <h3 className="mb-1 text-base font-semibold hover:text-red-600 md:text-lg">{product.name}</h3>
-                </Link>
-                <p className="mb-2 text-sm text-gray-600 line-clamp-2">{product.description}</p>
-                <div className="mb-2 flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <span
-                      key={i}
-                      className={`h-4 w-4 ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-200"}`}
-                    >
-                      ★
-                    </span>
-                  ))}
-                  <span className="ml-2 text-sm text-gray-600">({product.reviews})</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="text-lg font-bold text-red-600 md:text-xl">{formatPrice(product.price)}</span>
-                  {product.oldPrice && (
-                    <span className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.oldPrice)}</span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <div className="flex items-center">
+                    <span className="text-lg font-bold text-red-600 md:text-xl">{formatPrice(product.price)}</span>
+                    {product.oldPrice && (
+                      <span className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.oldPrice)}</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

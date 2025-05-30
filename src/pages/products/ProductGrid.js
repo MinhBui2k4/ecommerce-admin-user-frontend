@@ -22,13 +22,17 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
   });
   const [loading, setLoading] = useState(true);
 
+  // Đặt lại pageNumber khi filters thay đổi
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageNumber: 0 }));
+  }, [filters]);
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
   };
 
   useEffect(() => {
     setLoading(true);
-    // Only include non-null filter values
     const validFilters = Object.fromEntries(
       Object.entries(filters).filter(([_, v]) => v !== null)
     );
@@ -41,10 +45,11 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
     };
     GET_ALL_PRODUCTS(params)
       .then((response) => {
-        setProducts(response.content.map((item) => ({
-          ...item,
-          reviews: 120, // Giả lập
-        })));
+        setProducts(
+          response.content.map((item) => ({
+            ...item,
+          }))
+        );
         setPagination({
           pageNumber: response.pageNumber,
           pageSize: response.pageSize,
@@ -154,7 +159,7 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
                       ★
                     </span>
                   ))}
-                  <span className="ml-2 text-sm text-gray-600">({product.reviews})</span>
+                  <span className="ml-2 text-sm text-gray-600">({product.review})</span>
                 </div>
                 <div className="flex items-center">
                   <span className="text-lg font-bold text-red-600 md:text-xl">{formatPrice(product.price)}</span>

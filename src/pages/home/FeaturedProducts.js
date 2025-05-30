@@ -126,7 +126,7 @@ export default function FeaturedProducts() {
                     ★
                   </span>
                 ))}
-                {/* <span className="ml-2 text-sm text-gray-600">({product.rating || 0})</span> */}
+                <span className="ml-2 text-sm text-gray-600">({product.review || 0})</span>
               </div>
               <div className="flex items-center">
                 <span className="text-lg font-bold text-red-600 md:text-xl">{formatPrice(product.price)}</span>
