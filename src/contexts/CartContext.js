@@ -18,11 +18,13 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
     const [cartItems, setCartItems] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const fetchCart = useCallback(
         debounce(async () => {
             console.log("fetchCart called with token:", localStorage.getItem("authToken"));
             try {
+                setLoading(true);
                 const response = await GET_CART();
                 console.log("Cart API response:", response);
                 setCartItems(response.content[0]?.items || []);
@@ -30,14 +32,18 @@ export function CartProvider({ children }) {
                 console.error("Failed to fetch cart:", error);
                 if (error.response?.status === 401) {
                     toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+                } else {
+                    toast.error("Không thể tải giỏ hàng.");
                 }
+            } finally {
+                setLoading(false);
             }
         }, 500),
         []
     );
 
     const getCartTotal = () => {
-        return cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
+        return cartItems.reduce((sum, item) => sum + (item.productPrice || 0) * (item.quantity || 0), 0);
     };
 
     useEffect(() => {
@@ -45,11 +51,13 @@ export function CartProvider({ children }) {
         console.log("CartContext useEffect, token:", token);
         if (token) {
             fetchCart();
+        } else {
+            setLoading(false);
         }
     }, [fetchCart]);
 
     return (
-        <CartContext.Provider value={{ cartItems, setCartItems, fetchCart, getCartTotal }}>
+        <CartContext.Provider value={{ cartItems, setCartItems, fetchCart, getCartTotal, loading }}>
             {children}
         </CartContext.Provider>
     );

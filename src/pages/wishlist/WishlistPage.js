@@ -2,42 +2,84 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import Card, { CardContent, CardFooter } from "../../components/ui/Card";
-import { Badge } from "../../components/ui/Badge";
 import { useWishlist } from "../../contexts/WishlistContext";
-import { ADD_TO_CART, REMOVE_FROM_WISHLIST } from "../../api/apiService";
+import { ADD_TO_CART, REMOVE_FROM_WISHLIST, GET_PRODUCT_BY_ID } from "../../api/apiService";
 import { toast } from "react-toastify";
 import { useCart } from "../../contexts/CartContext";
 
 export default function Wishlist() {
-  const { wishlistItems, pagination, fetchWishlist } = useWishlist();
-  const [currentPage, setCurrentPage] = useState(pagination.pageNumber);
+  const { wishlistItems, fetchWishlist, totalWishlistItems } = useWishlist();
   const { fetchCart } = useCart();
-  const pageSize = pagination.pageSize;
+  const [detailedItems, setDetailedItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch wishlist chỉ một lần khi component mount
   useEffect(() => {
-    fetchWishlist(currentPage, pageSize);
-  }, [currentPage, pageSize]);
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      fetchWishlist(0, 1000); // Lấy tất cả sản phẩm
+    } else {
+      setLoading(false); // Nếu không đăng nhập, không tải
+    }
+  }, [fetchWishlist]);
+
+  // Fetch thông tin chi tiết sản phẩm
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      if (wishlistItems.length === 0) {
+        setDetailedItems([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log("Fetching product details for:", wishlistItems.map((item) => item.productId));
+        const productPromises = wishlistItems.map((item) =>
+          GET_PRODUCT_BY_ID(item.productId).catch((error) => {
+            console.error(`Error fetching product ${item.productId}:`, error);
+            return null;
+          })
+        );
+
+        const products = await Promise.all(productPromises);
+        const validProducts = products
+          .filter((product) => product !== null)
+          .map((product, index) => ({
+            ...wishlistItems[index],
+            image: product.image,
+            description: product.description,
+            rating: product.rating || 0,
+            oldPrice: product.oldPrice || null,
+          }));
+
+        console.log("Detailed products:", validProducts);
+        setDetailedItems(validProducts);
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+        toast.error("Không thể tải thông tin sản phẩm");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductDetails();
+  }, [wishlistItems]);
 
   const handleRemoveFromWishlist = async (productId, productName) => {
     try {
       await REMOVE_FROM_WISHLIST(productId);
-      fetchWishlist(currentPage, pageSize);
-      toast.info(`Đã xóa ${productName} khỏi danh sách yêu thích`);
+      await fetchWishlist(0, 1000); // Làm mới wishlist
+      toast.success(`Đã xóa ${productName} khỏi danh sách yêu thích`);
     } catch (error) {
       toast.error("Không thể xóa sản phẩm khỏi danh sách yêu thích");
-    }
-  };
-
-  const handlePageChange = (newPage) => {
-    if (newPage >= 0 && newPage < pagination.totalPages) {
-      setCurrentPage(newPage);
     }
   };
 
   const handleAddToCart = async (item) => {
     try {
       await ADD_TO_CART({ productId: item.productId, quantity: 1 });
-      fetchCart();
+      await fetchCart();
       toast.success(`Đã thêm ${item.productName} vào giỏ hàng`);
     } catch (error) {
       toast.error("Không thể thêm vào giỏ hàng");
@@ -45,10 +87,20 @@ export default function Wishlist() {
   };
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+    if (!price || isNaN(price)) return "0 ₫";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
   };
 
-  if (!wishlistItems.length && pagination.totalElements === 0) {
+  if (loading) {
+    return <div className="container mx-auto px-4 py-8 text-center">Đang tải...</div>;
+  }
+
+  if (detailedItems.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h2 className="text-2xl font-bold mb-4">Danh sách yêu thích</h2>
@@ -62,21 +114,30 @@ export default function Wishlist() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-2xl font-bold mb-6 md:text-3xl">Danh sách yêu thích</h2>
+      <h2 className="text-2xl font-bold mb-6 md:text-3xl">
+        Danh sách yêu thích ({totalWishlistItems} sản phẩm)
+      </h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {wishlistItems.map((item) => (
-          <Card key={item.productId} className="overflow-hidden transform transition-transform duration-300 hover:scale-105">
+        {detailedItems.map((item) => (
+          <Card
+            key={item.productId}
+            className="overflow-hidden transform transition-transform duration-300 hover:scale-105"
+          >
             <div className="relative pt-4">
               <Link to={`/product/${item.productId}`}>
                 <div className="relative mx-auto h-48 w-48">
-                  {/* <img
-                    src={`http://localhost:8080/api/products/image/${item.image}`}
+                  <img
+                    src={
+                      item.image
+                        ? `http://localhost:8080/api/products/image/${item.image}`
+                        : "/images/product-placeholder.jpg"
+                    }
                     alt={item.productName}
                     className="object-contain w-full h-full transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
                       e.target.src = "/images/product-placeholder.jpg";
                     }}
-                  /> */}
+                  />
                 </div>
               </Link>
             </div>
@@ -84,7 +145,9 @@ export default function Wishlist() {
               <Link to={`/product/${item.productId}`}>
                 <h3 className="mb-1 text-lg font-semibold hover:text-red-600">{item.productName}</h3>
               </Link>
-              <p className="mb-2 text-sm text-gray-600 line-clamp-2">{item.description || "Không có mô tả"}</p>
+              <p className="mb-2 text-sm text-gray-600 line-clamp-2">
+                {item.description || "Không có mô tả"}
+              </p>
               <div className="mb-2 flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <span
@@ -98,7 +161,9 @@ export default function Wishlist() {
               <div className="flex items-center">
                 <span className="text-xl font-bold text-red-600">{formatPrice(item.productPrice)}</span>
                 {item.oldPrice && (
-                  <span className="ml-2 text-sm text-gray-500 line-through">{formatPrice(item.oldPrice)}</span>
+                  <span className="ml-2 text-sm text-gray-500 line-through">
+                    {formatPrice(item.oldPrice)}
+                  </span>
                 )}
               </div>
             </CardContent>
@@ -118,25 +183,6 @@ export default function Wishlist() {
             </CardFooter>
           </Card>
         ))}
-      </div>
-      <div className="mt-8 flex justify-center items-center space-x-4">
-        <Button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 0}
-          className="disabled:opacity-50"
-        >
-          Previous
-        </Button>
-        <span className="text-sm text-gray-600">
-          Trang {currentPage + 1} / {pagination.totalPages} (Tổng {pagination.totalElements} sản phẩm)
-        </span>
-        <Button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage >= pagination.totalPages - 1}
-          className="disabled:opacity-50"
-        >
-          Next
-        </Button>
       </div>
     </div>
   );

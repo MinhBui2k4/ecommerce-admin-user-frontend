@@ -60,7 +60,7 @@ export default function HeroSection() {
           }`}
         >
           <div className="relative h-full w-full">
-            <img
+            {/* <img
               src={slide.image}
               alt={slide.title}
               className="object-cover w-full h-full"
@@ -75,7 +75,7 @@ export default function HeroSection() {
                 maxWidth: "100%",
                 height: "100%"
               }}
-            />
+            /> */}
             <div className="absolute inset-0 bg-black/40">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full container mx-auto px-4">

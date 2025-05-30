@@ -48,7 +48,7 @@ export default function FeaturedProducts() {
     try {
       if (wishlistItems.some((item) => item.productId === product.id)) {
         await REMOVE_FROM_WISHLIST(product.id);
-        toast.info(`Đã xóa ${product.name} khỏi danh sách yêu thích`);
+        toast.success(`Đã xóa ${product.name} khỏi danh sách yêu thích`);
       } else {
         await ADD_TO_WISHLIST({ productId: product.id });
         toast.success(`Đã thêm ${product.name} vào danh sách yêu thích`);
