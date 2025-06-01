@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import Card, {  CardContent } from "../../components/ui/Card";
+import Card, { CardContent } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { GET_ALL_NEWS } from "../../api/apiService";
 
@@ -59,7 +59,9 @@ export default function NewsPage() {
         <div className="lg:col-span-2">
           <div className="space-y-6">
             {newsItems.length === 0 ? (
-              <p className="text-center text-gray-600">Không có tin tức nào.</p>
+              <p className="col-span-full text-center text-2xl font-semibold text-gray-600">
+                Không có tin tức nào.
+              </p>
             ) : (
               newsItems.map((news) => (
                 <Card key={news.id} className="overflow-hidden">
@@ -104,25 +106,28 @@ export default function NewsPage() {
               ))
             )}
           </div>
-          <div className="mt-8 flex justify-center items-center space-x-4">
-            <Button
-              onClick={() => handlePageChange(pagination.pageNumber - 1)}
-              disabled={pagination.pageNumber === 0}
-              className="disabled:opacity-50"
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-gray-600">
-              Trang {pagination.pageNumber + 1} / {pagination.totalPages} (Tổng {pagination.totalElements || 0} tin tức)
-            </span>
-            <Button
-              onClick={() => handlePageChange(pagination.pageNumber + 1)}
-              disabled={pagination.pageNumber >= pagination.totalPages - 1}
-              className="disabled:opacity-50"
-            >
-              Next
-            </Button>
-          </div>
+          {/* Chỉ hiển thị phân trang khi có tin tức */}
+          {newsItems.length > 0 && (
+            <div className="mt-8 flex justify-center items-center space-x-4">
+              <Button
+                onClick={() => handlePageChange(pagination.pageNumber - 1)}
+                disabled={pagination.pageNumber === 0}
+                className="disabled:opacity-50"
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-gray-600">
+                Trang {pagination.pageNumber + 1} / {pagination.totalPages} (Tổng {pagination.totalElements || 0} tin tức)
+              </span>
+              <Button
+                onClick={() => handlePageChange(pagination.pageNumber + 1)}
+                disabled={pagination.pageNumber >= pagination.totalPages - 1}
+                className="disabled:opacity-50"
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}

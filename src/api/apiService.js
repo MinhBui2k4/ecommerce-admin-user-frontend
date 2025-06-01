@@ -76,8 +76,9 @@ export function GET_USER_ORDERS(params) {
     return callApi("/orders", "GET", null, params, true);
 }
 
+
 export function GET_ORDERS_BY_STATUS(status, params) {
-    return callApi(`/orders/status/${status}`, "GET", null, params, true);
+    return callApi(`/orders/status/${status.toUpperCase()}`, "GET", null, params, true);
 }
 
 export function GET_ORDER_BY_ID(id) {
@@ -88,12 +89,13 @@ export function CANCEL_ORDER(id) {
     return callApi(`/orders/${id}/cancel`, "PUT", null, null, true);
 }
 
-export function CREATE_ORDER_FROM_CART(data) {
-    return callApi("/orders/from-cart", "POST", null, data, true);
+
+export function CREATE_ORDER(data) {
+    return callApi("/orders", "POST", data, null, true);
 }
 
 export function GET_PAYMENT_METHOD(id) {
-    return callApi(`/admin/payment-methods/${id}`, "GET", null, null, false);
+    return callApi(`/admin/payment-methods/${id}`, "GET", null, null, true);
 }
 
 export function GET_ALL_PAYMENT_METHODS(params = {}) {
@@ -122,10 +124,6 @@ export function DELETE_ADDRESS(id) {
 
 export function SET_DEFAULT_ADDRESS(id) {
     return callApi(`/users/addresses/${id}/default`, "PUT", null, null, true);
-}
-
-export function GET_ADDRESS(id) {
-    return callApi(`/users/addresses/${id}`, "GET", null, null, true);
 }
 
 // User APIs

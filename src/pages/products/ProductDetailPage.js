@@ -239,7 +239,7 @@ export default function ProductDetailPage() {
             <h3 className="mb-2 text-sm font-semibold">Số lượng</h3>
             <div className="flex items-center">
               <Button
-                variant="outline"
+                variant="blue"
                 size="icon"
                 className="h-10 w-10 rounded-r-none"
                 onClick={() => handleQuantityChange(quantity - 1)}
@@ -256,7 +256,7 @@ export default function ProductDetailPage() {
                 className="h-10 w-16 border-x-0 border-y text-center"
               />
               <Button
-                variant="outline"
+                variant="blue"
                 size="icon"
                 className="h-10 w-10 rounded-l-none"
                 onClick={() => handleQuantityChange(quantity + 1)}

@@ -27,7 +27,7 @@ export function TabsTrigger({ value, children, activeTab, setActiveTab }) {
   return (
     <button
       className={classNames(
-        "px-4 py-2 text-sm font-medium focus:outline-none",
+        "px-4 py-2 text-xl font-medium focus:outline-none",
         activeTab === value
           ? "border-b-2 border-red-600 text-red-600"
           : "text-gray-600 hover:text-red-600"

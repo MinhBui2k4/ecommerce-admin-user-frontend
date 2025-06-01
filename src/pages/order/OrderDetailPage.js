@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Button } from "../../components/ui/Button";
-import Card, { CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
-import { Badge } from "../../components/ui/Badge";
-import { Separator } from "../../components/ui/Separator";
-import { GET_ORDER_BY_ID, GET_PAYMENT_METHOD, GET_ADDRESS, CANCEL_ORDER } from "../../api/apiService";
+import { GET_ORDER_BY_ID, GET_ALL_PAYMENT_METHODS, GET_SHIPPING_ADDRESS, CANCEL_ORDER, GET_PRODUCT_BY_ID } from "../../api/apiService";
 import { toast } from "react-toastify";
 
 export default function OrderDetailPage() {
@@ -13,74 +9,149 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [shippingAddress, setShippingAddress] = useState(null);
+  const [productImages, setProductImages] = useState({}); // Lưu productImage theo productId
   const [loading, setLoading] = useState(true);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusStyle = (status) => {
     switch (status) {
+      case "ORDERED":
+        return { border: "1px solid #6B7280", color: "#6B7280" };
+      case "CONFIRMED":
+        return { border: "1px solid #8B5CF6", color: "#8B5CF6" };
       case "PROCESSING":
-        return <Badge variant="processing">Đang xử lý</Badge>;
+        return { border: "1px solid #3B82F6", color: "#3B82F6" };
       case "SHIPPED":
-        return <Badge variant="shipped">Đang giao</Badge>;
-      case "DELIVERED":
-        return <Badge className="border-green-500 text-green-500">Hoàn thành</Badge>;
+        return { border: "1px solid #F97316", color: "#F97316" };
+      case "COMPLETED":
+        return { border: "1px solid #10B981", color: "#10B981" };
       case "CANCELLED":
-        return <Badge className="border-red-500 text-red-500">Đã hủy</Badge>;
+        return { border: "1px solid #EF4444", color: "#EF4444" };
       default:
-        return <Badge>Đặt hàng</Badge>;
+        return { border: "1px solid #6B7280", color: "#6B7280" };
     }
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast.error("Vui lòng đăng nhập để xem chi tiết đơn hàng");
+      navigate("/login");
+      return;
+    }
+
+    console.log("orderId from useParams:", orderId);
+    if (!orderId || isNaN(parseInt(orderId)) || parseInt(orderId) <= 0) {
+      toast.error("Mã đơn hàng không hợp lệ");
+      setLoading(false);
+      navigate("/orders");
+      return;
+    }
+
     setLoading(true);
-    Promise.all([
-      GET_ORDER_BY_ID(orderId),
-      GET_PAYMENT_METHOD(1), // Assuming paymentMethodId=1 for simplicity
-      GET_ADDRESS(1), // Assuming shippingAddressId=1
-    ])
-      .then(([orderData, paymentData, addressData]) => {
+    GET_ORDER_BY_ID(orderId)
+      .then((orderData) => {
+        console.log("Order data:", orderData);
+        if (!orderData || !orderData.id) {
+          throw new Error("Dữ liệu đơn hàng không hợp lệ");
+        }
         setOrder(orderData);
+
+        // Lấy productImage cho từng sản phẩm
+        const productPromises = orderData.items.map((item) =>
+          GET_PRODUCT_BY_ID(item.productId)
+            .then((product) => ({
+              productId: item.productId,
+              image: product.image || null, // Giả sử API trả về trường image
+            }))
+            .catch((error) => {
+              console.error(`Failed to fetch product ${item.productId}:`, error);
+              return { productId: item.productId, image: null };
+            })
+        );
+
+        return Promise.all([
+          GET_ALL_PAYMENT_METHODS()
+            .then((response) => {
+              console.log("Payment methods:", response);
+              const method = response.content?.find((m) => m.id === orderData.paymentMethodId);
+              return method || null;
+            })
+            .catch((error) => {
+              console.error("Failed to fetch payment methods:", error);
+              return null;
+            }),
+          orderData.shippingAddressId
+            ? GET_SHIPPING_ADDRESS(orderData.shippingAddressId)
+              .then((addressData) => {
+                console.log("Shipping address:", addressData);
+                return addressData;
+              })
+              .catch((error) => {
+                console.error("Failed to fetch shipping address:", error);
+                return null;
+              })
+            : Promise.resolve(null),
+          Promise.all(productPromises).then((images) => {
+            const imageMap = images.reduce((acc, { productId, image }) => {
+              acc[productId] = image;
+              return acc;
+            }, {});
+            return imageMap;
+          }),
+        ]);
+      })
+      .then(([paymentData, addressData, imageMap]) => {
         setPaymentMethod(paymentData);
         setShippingAddress(addressData);
+        setProductImages(imageMap);
         setLoading(false);
       })
       .catch((error) => {
         console.error("Failed to fetch order details:", error);
-        toast.error("Không thể tải chi tiết đơn hàng");
+        const errorMessage = error.response?.data?.message || error.message;
+        toast.error(`Không thể tải chi tiết đơn hàng: ${errorMessage}`);
+        setOrder(null);
         setLoading(false);
+        navigate("/orders");
       });
-  }, [orderId]);
+  }, [orderId, navigate]);
 
   const handleCancelOrder = async () => {
     try {
       await CANCEL_ORDER(orderId);
-      setOrder((prev) => ({
-        ...prev,
-        status: "CANCELLED",
-        timeline: [
-          ...prev.timeline,
-          {
-            id: Date.now(),
-            status: "CANCELLED",
-            date: new Date().toISOString(),
-            description: "Đơn hàng đã bị hủy bởi người dùng",
-          },
-        ],
-      }));
+      setOrder((prev) => ({ ...prev, status: "CANCELLED" }));
       toast.success("Đã hủy đơn hàng");
     } catch (error) {
-      toast.error("Không thể hủy đơn hàng");
+      const errorMessage = error.response?.data?.message || error.message;
+      toast.error(`Không thể hủy đơn hàng: ${errorMessage}`);
     }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex h-96 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "16px" }}>
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "384px" }}>
+          <div
+            style={{
+              width: "32px",
+              height: "32px",
+              border: "4px solid #3B82F6",
+              borderTop: "4px solid transparent",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+            }}
+          />
+          <style>
+            {`
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+            `}
+          </style>
         </div>
       </div>
     );
@@ -88,12 +159,27 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <h2 className="mb-4 text-2xl font-bold">Đơn hàng không tồn tại</h2>
-          <p className="mb-6 text-gray-600">Đơn hàng bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "16px" }}>
+        <div style={{ textAlign: "center", padding: "48px 0" }}>
+          <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px" }}>
+            Đơn hàng không tồn tại
+          </h2>
+          <p style={{ color: "#6B7280", marginBottom: "24px" }}>
+            Đơn hàng bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.
+          </p>
           <Link to="/orders">
-            <Button>Quay lại danh sách đơn hàng</Button>
+            <button
+              style={{
+                padding: "8px 16px",
+                background: "#3B82F6",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Quay lại danh sách đơn hàng
+            </button>
           </Link>
         </div>
       </div>
@@ -101,167 +187,283 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center">
+    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "16px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "24px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
           <Link to="/orders">
-            <Button variant="ghost" className="mr-4">
-              <span className="mr-2 text-xl">←</span>
-              Quay lại
-            </Button>
+            <button
+              style={{
+                padding: "8px 16px",
+                background: "none",
+                border: "none",
+                color: "#3B82F6",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: "20px", marginRight: "8px" }}>←</span> Quay lại
+            </button>
           </Link>
-          <h1 className="text-2xl font-bold md:text-3xl">Chi tiết đơn hàng #{order.id}</h1>
+          <h1 style={{ fontSize: "24px", fontWeight: "bold", marginLeft: "16px" }}>
+            Chi tiết đơn hàng #{order.id}
+          </h1>
         </div>
-        <div>{getStatusBadge(order.status)}</div>
+        <span
+          style={{
+            ...getStatusStyle(order.status),
+            padding: "4px 8px",
+            borderRadius: "12px",
+            fontSize: "12px",
+          }}
+        >
+          {order.status === "ORDERED"
+            ? "Đã đặt"
+            : order.status === "CONFIRMED"
+            ? "Đã xác nhận"
+            : order.status === "PROCESSING"
+            ? "Đang xử lý"
+            : order.status === "SHIPPED"
+            ? "Đang giao"
+            : order.status === "COMPLETED"
+            ? "Hoàn thành"
+            : "Đã hủy"}
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <span className="mr-2 text-xl">📦</span>
-                Trạng thái đơn hàng
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative">
-                <div className="absolute left-3 top-0 h-full w-0.5 bg-gray-200"></div>
-                <div className="space-y-6">
-                  {order.timeline.map((event, index) => (
-                    <div key={event.id} className="relative flex items-start">
-                      <div className="absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white">
-                        <span className="text-xs">{index + 1}</span>
-                      </div>
-                      <div className="ml-10">
-                        <h3 className="font-medium">{event.description}</h3>
-                        <p className="text-sm text-gray-500">
-                          {new Date(event.date).toLocaleString("vi-VN")}
-                        </p>
-                      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
+        <div>
+          <div
+            style={{
+              border: "1px solid #D1D5DB",
+              borderRadius: "8px",
+              padding: "16px",
+              background: "white",
+              marginBottom: "24px",
+            }}
+          >
+            <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}>
+              Trạng thái đơn hàng
+            </h2>
+            <div style={{ position: "relative" }}>
+              <div
+                style={{
+                  position: "absolute",
+                  left: "12px",
+                  top: "0",
+                  height: "100%",
+                  width: "2px",
+                  background: "#E5E7EB",
+                }}
+              />
+              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                {order.timeline?.map((event, index) => (
+                  <div key={event.id} style={{ position: "relative", display: "flex", alignItems: "flex-start" }}>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: "0",
+                        top: "0",
+                        width: "24px",
+                        height: "24px",
+                        background: "#3B82F6",
+                        color: "white",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {index + 1}
                     </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Sản phẩm</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {order.items.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4">
-                    <div className="relative h-16 w-16 overflow-hidden rounded-md">
-                      <img
-                        src={`http://localhost:8080/api/products/image/${item.productId}.webp`}
-                        alt={item.productName}
-                        className="object-cover w-full h-full"
-                        onError={(e) => { e.target.src = "/images/product-placeholder.jpg"; }}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium">{item.productName}</h3>
-                      <p className="text-sm text-gray-500">SL: {item.quantity}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">{formatPrice(item.price * item.quantity)}</p>
+                    <div style={{ marginLeft: "40px" }}>
+                      <h3 style={{ fontSize: "16px", fontWeight: "500" }}>{event.description}</h3>
+                      <p style={{ fontSize: "14px", color: "#6B7280" }}>
+                        {new Date(event.date).toLocaleString("vi-VN")}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <span className="mr-2 text-xl">🚚</span>
-                Thông tin giao hàng
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium">Địa chỉ giao hàng</h3>
-                  <div className="mt-2 flex items-start">
-                    <span className="mr-2 text-xl text-gray-500">📍</span>
-                    <div>
-                      <p className="font-medium">{shippingAddress?.name}</p>
-                      <p className="text-sm text-gray-500">{shippingAddress?.phone}</p>
-                      <p className="text-sm text-gray-500">
-                        {`${shippingAddress?.address}, ${shippingAddress?.ward}, ${shippingAddress?.district}, ${shippingAddress?.province}`}
-                      </p>
-                    </div>
+          <div
+            style={{
+              border: "1px solid #D1D5DB",
+              borderRadius: "8px",
+              padding: "16px",
+              background: "white",
+              marginBottom: "24px",
+            }}
+          >
+            <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}>Sản phẩm</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {order.items?.map((item) => (
+                <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <div style={{ width: "64px", height: "64px", overflow: "hidden", borderRadius: "8px" }}>
+                    <img
+                      src={
+                        productImages[item.productId]
+                          ? `http://localhost:8080/api/products/image/${productImages[item.productId]}`
+                          : "/images/product-placeholder.jpg"
+                      }
+                      alt={item.productName}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={(e) => {
+                        e.target.src = "/images/product-placeholder.jpg";
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: "20px", fontWeight: "500" }}>{item.productName}</h3>
+                    <p style={{ fontSize: "14px", color: "#6B7280" }}>SL: {item.quantity}</p>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ fontSize: "16px", fontWeight: "500" }}>
+                      {formatPrice(item.price * item.quantity)}
+                    </p>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          </div>
+
+          <div
+            style={{
+              border: "1px solid #D1D5DB",
+              borderRadius: "8px",
+              padding: "16px",
+              background: "white",
+            }}
+          >
+            <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}>
+              Thông tin giao hàng
+            </h2>
+            <div>
+              <h3 style={{ fontSize: "16px", fontWeight: "500" }}>Địa chỉ giao hàng</h3>
+              {shippingAddress ? (
+                <div style={{ display: "flex", alignItems: "flex-start", marginTop: "8px" }}>
+                  <span style={{ fontSize: "20px", color: "#6B7280", marginRight: "8px" }}>📍</span>
+                  <div>
+                    <p style={{ fontSize: "16px", fontWeight: "500" }}>{shippingAddress.name}</p>
+                    <p style={{ fontSize: "14px", color: "#6B7280" }}>{shippingAddress.phone}</p>
+                    <p style={{ fontSize: "14px", color: "#6B7280" }}>
+                      {`${shippingAddress.address}, ${shippingAddress.ward}, ${shippingAddress.district}, ${shippingAddress.province}`}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p style={{ fontSize: "14px", color: "#6B7280" }}>Không có thông tin địa chỉ</p>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="lg:col-span-1">
-          <Card className="sticky top-20">
-            <CardHeader>
-              <CardTitle>Tóm tắt đơn hàng</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <p className="text-sm">Ngày đặt hàng</p>
-                  <p className="font-medium">{new Date(order.orderDate).toLocaleDateString("vi-VN")}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="text-sm">Mã đơn hàng</p>
-                  <p className="font-medium">#{order.id}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="text-sm">Phương thức thanh toán</p>
-                  <div className="flex items-center">
-                    <span className="mr-1 text-xl text-gray-500">💳</span>
-                    <p className="font-medium">{paymentMethod?.name}</p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <p className="text-sm">Tạm tính</p>
-                    <p className="font-medium">{formatPrice(order.total - order.shippingCost)}</p>
-                  </div>
-                  <div className="flex justify-between">
-                    <p className="text-sm">Phí vận chuyển</p>
-                    <p className="font-medium">{formatPrice(order.shippingCost)}</p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex justify-between">
-                  <p className="text-base font-medium">Tổng cộng</p>
-                  <p className="text-lg font-bold text-blue-600">{formatPrice(order.total)}</p>
-                </div>
-
-                <div className="mt-6 space-y-2">
-                  <Button className="w-full" variant="outline">
-                    Liên hệ hỗ trợ
-                  </Button>
-                  {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
-                    <Button
-                      className="w-full bg-red-500 hover:bg-red-600"
-                      onClick={handleCancelOrder}
-                    >
-                      <span className="mr-2 text-xl">⚠️</span>
-                      Hủy đơn hàng
-                    </Button>
-                  )}
+        <div>
+          <div
+            style={{
+              border: "1px solid #D1D5DB",
+              borderRadius: "8px",
+              padding: "16px",
+              background: "white",
+              position: "sticky",
+              top: "80px",
+            }}
+          >
+            <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px" }}>
+              Tóm tắt đơn hàng
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <p style={{ fontSize: "14px" }}>Ngày đặt hàng</p>
+                <p style={{ fontSize: "14px", fontWeight: "500" }}>
+                  {new Date(order.orderDate).toLocaleDateString("vi-VN")}
+                </p>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <p style={{ fontSize: "14px" }}>Mã đơn hàng</p>
+                <p style={{ fontSize: "14px", fontWeight: "500" }}>#{order.id}</p>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <p style={{ fontSize: "14px" }}>Phương thức thanh toán</p>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <span style={{ fontSize: "20px", color: "#6B7280", marginRight: "4px" }}>💳</span>
+                  <p style={{ fontSize: "14px", fontWeight: "500" }}>
+                    {paymentMethod?.name || "Không xác định"}
+                  </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+
+              <div style={{ height: "1px", background: "#D1D5DB" }} />
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <p style={{ fontSize: "14px" }}>Tạm tính</p>
+                  <p style={{ fontSize: "14px", fontWeight: "500" }}>
+                    {formatPrice(order.total - order.shippingCost)}
+                  </p>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <p style={{ fontSize: "14px" }}>Phí vận chuyển</p>
+                  <p style={{ fontSize: "14px", fontWeight: "500" }}>
+                    {formatPrice(order.shippingCost)}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ height: "1px", background: "#D1D5DB" }} />
+
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <p style={{ fontSize: "16px", fontWeight: "500" }}>Tổng cộng</p>
+                <p style={{ fontSize: "18px", fontWeight: "bold", color: "#3B82F6" }}>
+                  {formatPrice(order.total)}
+                </p>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "24px" }}>
+                <button
+                  style={{
+                    padding: "8px 16px",
+                    border: "1px solid #D1D5DB",
+                    borderRadius: "4px",
+                    background: "white",
+                    color: "#374151",
+                    cursor: "pointer",
+                  }}
+                >
+                  Liên hệ hỗ trợ
+                </button>
+                {["ORDERED", "CONFIRMED"].includes(order.status) && (
+                  <button
+                    style={{
+                      padding: "8px 16px",
+                      background: "#EF4444",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onClick={handleCancelOrder}
+                  >
+                    <span style={{ fontSize: "20px", marginRight: "8px" }}>⚠️</span>
+                    Hủy đơn hàng
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

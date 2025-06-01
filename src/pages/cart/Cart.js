@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import Card, { CardContent, CardFooter, CardHeader, CardTitle } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Checkbox } from "../../components/ui/Checkbox";
-import { GET_CART, UPDATE_CART_ITEM, REMOVE_FROM_CART, CLEAR_CART, GET_PRODUCT_BY_ID } from "../../api/apiService";
+import { UPDATE_CART_ITEM, REMOVE_FROM_CART, CLEAR_CART, GET_PRODUCT_BY_ID } from "../../api/apiService";
 import { useCart } from "../../contexts/CartContext";
 import { toast } from "react-toastify";
 import { Label } from "../../components/ui/Label";
@@ -18,56 +18,19 @@ const validCoupons = [
 ];
 
 export default function Cart() {
-    const { cartItems, setCartItems, getCartTotal, fetchCart, loading: cartLoading } = useCart();
+    const {
+        detailedItems,
+        cartItems,
+        fetchCart,
+        loading: cartLoading,
+        selectedItems,
+        setSelectedItems,
+    } = useCart();
     const [couponCode, setCouponCode] = useState("");
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [couponError, setCouponError] = useState("");
     const [shippingMethod, setShippingMethod] = useState("standard");
-    const [selectedItems, setSelectedItems] = useState([]);
     const [selectAll, setSelectAll] = useState(false);
-    const [detailedItems, setDetailedItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    // Fetch chi tiết sản phẩm để lấy hình ảnh
-    useEffect(() => {
-        const fetchProductDetails = async () => {
-            if (cartItems.length === 0) {
-                setDetailedItems([]);
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                console.log("Fetching product details for cart items:", cartItems.map((item) => item.productId));
-                const productPromises = cartItems.map((item) =>
-                    GET_PRODUCT_BY_ID(item.productId).catch((error) => {
-                        console.error(`Error fetching product ${item.productId}:`, error);
-                        return null;
-                    })
-                );
-
-                const products = await Promise.all(productPromises);
-                const validProducts = products
-                    .filter((product) => product !== null)
-                    .map((product, index) => ({
-                        ...cartItems[index],
-                        productImage: product.image,
-                        isAvailable: product.availability,
-                    }));
-
-                console.log("Detailed cart items:", validProducts);
-                setDetailedItems(validProducts);
-            } catch (error) {
-                console.error("Error fetching product details:", error);
-                toast.error("Không thể tải thông tin sản phẩm");
-            } finally {
-                setLoading(cartLoading || false);
-            }
-        };
-
-        fetchProductDetails();
-    }, [cartItems, cartLoading]);
 
     const formatPrice = (price) => {
         if (!price || isNaN(price)) return "0 ₫";
@@ -90,7 +53,8 @@ export default function Cart() {
         try {
             await REMOVE_FROM_CART(id);
             await fetchCart();
-            toast.info(`Đã xóa ${name} khỏi giỏ hàng`);
+            setSelectedItems((prev) => prev.filter((itemId) => itemId !== id));
+            toast.success(`Đã xóa ${name} khỏi giỏ hàng`);
         } catch (error) {
             console.error("Error removing item:", error);
             toast.error("Không thể xóa sản phẩm");
@@ -112,7 +76,7 @@ export default function Cart() {
             for (const id of selectedItems) {
                 await REMOVE_FROM_CART(id);
                 const item = cartItems.find((item) => item.id === id);
-                toast.info(`Đã xóa ${item.productName} khỏi giỏ hàng`);
+                toast.success(`Đã xóa ${item.productName} khỏi giỏ hàng`);
             }
             await fetchCart();
             setSelectedItems([]);
@@ -122,6 +86,14 @@ export default function Cart() {
             toast.error("Không thể xóa các sản phẩm đã chọn");
         }
     };
+    const handleCheckout = () => {
+    if (selectedItems.length === 0) {
+      toast.error("Chọn sản phẩm trước khi thanh toán");
+      return;
+    }
+    // Nếu có sản phẩm được chọn, chuyển hướng tới checkout
+    window.location.href = "/checkout";
+  };
 
     const handleUpdateQuantity = async (id, quantity) => {
         if (quantity < 1) {
@@ -138,7 +110,6 @@ export default function Cart() {
 
             console.log(`Attempting to update item ${id} (productId: ${item.productId}) to quantity ${quantity}`);
 
-            // Fetch product to check stock and availability
             const product = await GET_PRODUCT_BY_ID(item.productId);
             if (!product.availability) {
                 toast.error(`Sản phẩm ${item.productName} hiện không có sẵn`);
@@ -149,7 +120,6 @@ export default function Cart() {
                 return;
             }
 
-            // Gửi cả productId và quantity để đáp ứng validation của CartItemDTO
             await UPDATE_CART_ITEM(id, {
                 quantity,
                 productId: item.productId,
@@ -181,8 +151,8 @@ export default function Cart() {
         setCouponError("");
     };
 
-    const handleShippingChange = (method) => {
-        setShippingMethod(method);
+    const handleShippingChange = (e) => {
+        setShippingMethod(e.target.value);
     };
 
     const handleClearCart = async () => {
@@ -213,7 +183,7 @@ export default function Cart() {
         : 0;
     const total = subtotal + shippingCost - discount;
 
-    if (loading) return <p className="text-center py-8">Đang tải...</p>;
+    if (cartLoading) return <p className="text-center py-8">Đang tải...</p>;
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -288,44 +258,44 @@ export default function Cart() {
                                             <div className="flex items-center justify-between sm:ml-6 sm:flex-col sm:items-end">
                                                 <div className="flex items-center border rounded-md">
                                                     <Button
-                                                        variant="outline"
+                                                        variant="blue"
                                                         size="icon"
-                                                        className="h-9 w-9 rounded-r-none border-r-0 bg-gray-50 hover:bg-gray-100"
+                                                        className="h-10 w-10 rounded-r-none"
                                                         onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                                                         disabled={item.quantity <= 1 || !item.isAvailable}
                                                     >
-                                                    <span className="text-lg">-</span>
+                                                        <span className="text-lg">-</span>
                                                     </Button>
-                                                        <Input
+                                                    <Input
                                                         type="number"
                                                         min="1"
                                                         value={item.quantity}
                                                         onChange={(e) => handleUpdateQuantity(item.id, Number.parseInt(e.target.value) || 1)}
-                                                        className="h-9 w-16 border-none text-center font-medium focus:ring-0"
+                                                        className="h-10 w-16 border-x-0 border-y text-center"
                                                         disabled={!item.isAvailable}
                                                     />
                                                     <Button
-                                                        variant="outline"
+                                                        variant="blue"
                                                         size="icon"
-                                                        className="h-9 w-9 rounded-l-none border-l-0 bg-gray-50 hover:bg-gray-100"
+                                                        className="h-10 w-10 rounded-l-none"
                                                         onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                                                         disabled={!item.isAvailable}
                                                     >
-                                                    <span className="text-lg">+</span>
+                                                        <span className="text-lg">+</span>
                                                     </Button>
                                                 </div>
                                                 <div className="flex items-center space-x-4 mt-2 sm:mt-0">
                                                     <p className="font-medium">{formatPrice(item.productPrice * item.quantity)}</p>
                                                     <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="text-red-500 hover:bg-red-50 hover:text-red-600"
-                                                    onClick={() => handleRemoveItem(item.id, item.productName)}
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                                                        onClick={() => handleRemoveItem(item.id, item.productName)}
                                                     >
-                                                    <span>🗑️</span>
+                                                        <span>🗑️</span>
                                                     </Button>
                                                 </div>
-                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -336,21 +306,21 @@ export default function Cart() {
                                 </Link>
                                 <div className="flex space-x-2">
                                     {selectedItems.length > 0 && (
-                                    <Button
-                                        className="bg-red-600 text-white hover:bg-red-700"
-                                        onClick={handleRemoveSelected}
-                                    >
-                                        Xóa sản phẩm đã chọn
-                                    </Button>
+                                        <Button
+                                            className="bg-red-600 text-white hover:bg-red-700"
+                                            onClick={handleRemoveSelected}
+                                        >
+                                            Xóa sản phẩm đã chọn
+                                        </Button>
                                     )}
                                     <Button
-                                    className="bg-red-600 text-white hover:bg-red-700"
-                                    onClick={handleClearCart}
+                                        className="bg-red-600 text-white hover:bg-red-700"
+                                        onClick={handleClearCart}
                                     >
-                                    Xóa giỏ hàng
+                                        Xóa giỏ hàng
                                     </Button>
                                 </div>
-                                </CardFooter>
+                            </CardFooter>
                         </Card>
                     </div>
                     <div className="lg:col-span-1">
@@ -403,7 +373,7 @@ export default function Cart() {
                                                     name="shipping"
                                                     value="standard"
                                                     checked={shippingMethod === "standard"}
-                                                    onChange={() => handleShippingChange("standard")}
+                                                    onChange={handleShippingChange}
                                                     className="h-4 w-4 text-blue-600"
                                                 />
                                                 <Label htmlFor="shipping-standard" className="text-sm">
@@ -420,7 +390,7 @@ export default function Cart() {
                                                     name="shipping"
                                                     value="express"
                                                     checked={shippingMethod === "express"}
-                                                    onChange={() => handleShippingChange("express")}
+                                                    onChange={handleShippingChange}
                                                     className="h-4 w-4 text-blue-600"
                                                 />
                                                 <Label htmlFor="shipping-express" className="text-sm">
@@ -454,7 +424,7 @@ export default function Cart() {
                                     <span className="text-lg font-bold text-blue-600">{formatPrice(total)}</span>
                                 </div>
                                 <Link to="/checkout" className="block w-full">
-                                    <Button className="w-full px-8 py-3" size="lg">
+                                    <Button className="w-full px-8 py-3" size="lg" disabled={selectedItems.length === 0}>
                                         Tiến hành thanh toán <span className="ml-2">➡️</span>
                                     </Button>
                                 </Link>

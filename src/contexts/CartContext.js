@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { GET_CART } from "../api/apiService";
+import { GET_CART, GET_PRODUCT_BY_ID } from "../api/apiService";
 import { toast } from "react-toastify";
 
 function debounce(func, wait) {
@@ -18,6 +18,8 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
     const [cartItems, setCartItems] = useState([]);
+    const [detailedItems, setDetailedItems] = useState([]);
+    const [selectedItems, setSelectedItems] = useState([]); // Thêm trạng thái selectedItems
     const [loading, setLoading] = useState(true);
 
     const fetchCart = useCallback(
@@ -26,8 +28,29 @@ export function CartProvider({ children }) {
             try {
                 setLoading(true);
                 const response = await GET_CART();
-                console.log("Cart API response:", response);
-                setCartItems(response.content[0]?.items || []);
+                const items = response.content[0]?.items || [];
+                setCartItems(items);
+
+                // Fetch chi tiết sản phẩm
+                if (items.length > 0) {
+                    const productPromises = items.map((item) =>
+                        GET_PRODUCT_BY_ID(item.productId).catch((error) => {
+                            console.error(`Error fetching product ${item.productId}:`, error);
+                            return null;
+                        })
+                    );
+                    const products = await Promise.all(productPromises);
+                    const validProducts = products
+                        .filter((product) => product !== null)
+                        .map((product, index) => ({
+                            ...items[index],
+                            productImage: product.image,
+                            isAvailable: product.availability,
+                        }));
+                    setDetailedItems(validProducts);
+                } else {
+                    setDetailedItems([]);
+                }
             } catch (error) {
                 console.error("Failed to fetch cart:", error);
                 if (error.response?.status === 401) {
@@ -43,7 +66,15 @@ export function CartProvider({ children }) {
     );
 
     const getCartTotal = () => {
-        return cartItems.reduce((sum, item) => sum + (item.productPrice || 0) * (item.quantity || 0), 0);
+        return selectedItems.length > 0
+            ? cartItems
+                  .filter((item) => selectedItems.includes(item.id))
+                  .reduce((sum, item) => sum + (item.productPrice || 0) * (item.quantity || 0), 0)
+            : 0;
+    };
+
+    const clearSelectedItems = () => {
+        setSelectedItems([]);
     };
 
     useEffect(() => {
@@ -57,7 +88,19 @@ export function CartProvider({ children }) {
     }, [fetchCart]);
 
     return (
-        <CartContext.Provider value={{ cartItems, setCartItems, fetchCart, getCartTotal, loading }}>
+        <CartContext.Provider
+            value={{
+                cartItems,
+                setCartItems,
+                fetchCart,
+                getCartTotal,
+                detailedItems,
+                loading,
+                selectedItems,
+                setSelectedItems,
+                clearSelectedItems,
+            }}
+        >
             {children}
         </CartContext.Provider>
     );

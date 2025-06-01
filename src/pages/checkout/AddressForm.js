@@ -3,7 +3,15 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Label } from "../../components/ui/Label";
 import { Textarea } from "../../components/ui/Textarea";
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../../components/ui/AlertDialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../../components/ui/AlertDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/Select";
 import { CREATE_ADDRESS, UPDATE_ADDRESS, SET_DEFAULT_ADDRESS } from "../../api/apiService";
 import { toast } from "react-toastify";
@@ -24,14 +32,14 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
   useEffect(() => {
     if (addressToEdit) {
       setFormData({
-        name: addressToEdit.name,
-        phone: addressToEdit.phone,
-        address: addressToEdit.address,
-        ward: addressToEdit.ward,
-        district: addressToEdit.district,
-        province: addressToEdit.province,
-        isDefault: addressToEdit.isDefault,
-        type: addressToEdit.type,
+        name: addressToEdit.name || "",
+        phone: addressToEdit.phone || "",
+        address: addressToEdit.address || "",
+        ward: addressToEdit.ward || "",
+        district: addressToEdit.district || "",
+        province: addressToEdit.province || "",
+        isDefault: addressToEdit.isDefault || false,
+        type: addressToEdit.type || "home",
       });
     }
   }, [addressToEdit, open]);
@@ -65,19 +73,33 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
     setFormData((prev) => ({ ...prev, [name]: checked }));
   };
 
+  const validateForm = () => {
+    if (!formData.name.trim()) return "Họ và tên không được để trống";
+    if (!formData.phone.match(/^\d{10,11}$/)) return "Số điện thoại không hợp lệ (10-11 số)";
+    if (!formData.address.trim()) return "Địa chỉ cụ thể không được để trống";
+    if (!formData.ward) return "Vui lòng chọn phường/xã";
+    if (!formData.district) return "Vui lòng chọn quận/huyện";
+    if (!formData.province) return "Vui lòng chọn tỉnh/thành phố";
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.address || !formData.ward || !formData.district || !formData.province) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+    const error = validateForm();
+    if (error) {
+      toast.error(error);
       return;
     }
+
     try {
       let address;
       if (addressToEdit) {
+        console.log(`Updating address with id: ${addressToEdit.id}`, formData);
         address = await UPDATE_ADDRESS(addressToEdit.id, formData);
         onUpdateAddress?.({ ...formData, id: addressToEdit.id });
         toast.success("Cập nhật địa chỉ thành công");
       } else {
+        console.log("Creating new address:", formData);
         address = await CREATE_ADDRESS(formData);
         onAddAddress?.({ ...formData, id: address.id });
         toast.success("Thêm địa chỉ thành công");
@@ -87,23 +109,27 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
       }
       setOpen(false);
     } catch (error) {
-      toast.error("Không thể lưu địa chỉ");
+      console.error("Error saving address:", error);
+      const errorMessage = error.response?.data?.message || "Không thể lưu địa chỉ";
+      toast.error(errorMessage);
     }
   };
 
   const defaultTrigger = addressToEdit ? (
-    <Button variant="ghost" size="icon" className="h-8 w-8">
+    <button
+      className="h-8 w-8 flex items-center justify-center bg-blue-500 text-white rounded-md hover:bg-blue-600"
+      title="Chỉnh sửa địa chỉ"
+    >
       <span className="text-xl">✏️</span>
-    </Button>
+    </button>
   ) : (
     <Button variant="outline" size="sm">
-      <span className="mr-2 text-xl">➕</span>
-      Thêm địa chỉ mới
+      <span className="mr-2 text-xl">➕</span> Thêm địa chỉ mới
     </Button>
   );
 
   return (
-        <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>{trigger || defaultTrigger}</AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-[500px]">
         <AlertDialogHeader>
@@ -124,7 +150,6 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
                 <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} required />
               </div>
             </div>
-
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="province">Tỉnh/Thành phố</Label>
@@ -141,7 +166,6 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="district">Quận/Huyện</Label>
                 <Select value={formData.district} onValueChange={(value) => handleSelectChange("district", value)}>
@@ -157,7 +181,6 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="ward">Phường/Xã</Label>
                 <Select value={formData.ward} onValueChange={(value) => handleSelectChange("ward", value)}>
@@ -174,7 +197,6 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
                 </Select>
               </div>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="address">Địa chỉ cụ thể</Label>
               <Textarea
@@ -186,7 +208,6 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
                 required
               />
             </div>
-
             <div className="space-y-2">
               <Label>Loại địa chỉ</Label>
               <div className="flex space-x-4">
@@ -216,7 +237,6 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
                 </div>
               </div>
             </div>
-
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -230,7 +250,9 @@ export default function AddressForm({ onAddAddress, onUpdateAddress, addressToEd
             </div>
           </div>
           <AlertDialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Hủy</Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Hủy
+            </Button>
             <Button type="submit">{addressToEdit ? "Cập nhật" : "Lưu địa chỉ"}</Button>
           </AlertDialogFooter>
         </form>

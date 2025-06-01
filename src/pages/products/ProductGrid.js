@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import  Card,{ CardContent, CardFooter } from "../../components/ui/Card";  
+import Card, { CardContent, CardFooter } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import ProductPagination from "./ProductPagination";
@@ -106,7 +106,7 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
     <div id="product-grid">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.length === 0 ? (
-          <p className="col-span-full text-center text-gray-600">Không tìm thấy sản phẩm.</p>
+          <p className="col-span-full text-4xl text-center text-gray-600">Không tìm thấy sản phẩm.</p>
         ) : (
           products.map((product) => (
             <Card
@@ -115,23 +115,21 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
             >
               <div className="relative pt-4">
                 {product.new && (
-              <Badge
-                variant="info"
-                className="absolute left-2 top-2 z-10 rounded-md bg-blue-500 px-2 py-1 text-white shadow-md"
-              >
-                Mới
-              </Badge>
-            )}
-
-            {/* Badge "Giảm giá" */}
-            {product.sale && (
-              <Badge
-                variant="destructive"
-                className="absolute right-2 top-2 z-10 rounded-md bg-red-600 px-2 py-1 text-white shadow-md"
-              >
-                Giảm giá
-              </Badge>
-            )}
+                  <Badge
+                    variant="info"
+                    className="absolute left-2 top-2 z-10 rounded-md bg-blue-500 px-2 py-1 text-white shadow-md"
+                  >
+                    Mới
+                  </Badge>
+                )}
+                {product.sale && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute right-2 top-2 z-10 rounded-md bg-red-600 px-2 py-1 text-white shadow-md"
+                  >
+                    Giảm giá
+                  </Badge>
+                )}
                 <Link to={`/product/${product.id}`}>
                   <div className="relative mx-auto h-48 w-48">
                     <img
@@ -180,20 +178,19 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
                   }
                   onClick={() => handleToggleWishlist(product)}
                 >
-                  
-                <svg
-                  className={
-                    wishlistItems.some((item) => item.productId === product.id)
-                      ? "fill-red-500 stroke-red-500 h-5 w-5"
-                      : "fill-white stroke-gray-500 h-5 w-5 group-hover:fill-gray-600 group-hover:stroke-gray-600"
-                  }
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                  />
-                </svg>
+                  <svg
+                    className={
+                      wishlistItems.some((item) => item.productId === product.id)
+                        ? "fill-red-500 stroke-red-500 h-5 w-5"
+                        : "fill-white stroke-gray-500 h-5 w-5 group-hover:fill-gray-600 group-hover:stroke-gray-600"
+                    }
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                    />
+                  </svg>
                 </Button>
                 <Button
                   className="ml-2 flex-1"
@@ -208,12 +205,15 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
         )}
       </div>
 
-      <ProductPagination
-        totalItems={pagination.totalElements}
-        itemsPerPage={pagination.pageSize}
-        currentPage={pagination.pageNumber + 1}
-        onPageChange={handlePageChange}
-      />
+      {/* Chỉ hiển thị phân trang nếu totalElements > 9 */}
+      {pagination.totalElements > 9 && (
+        <ProductPagination
+          totalItems={pagination.totalElements}
+          itemsPerPage={pagination.pageSize}
+          currentPage={pagination.pageNumber + 1}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 }

@@ -202,7 +202,7 @@ export default function ProfilePage() {
         <div className="md:col-span-3">
           <Tabs defaultValue="personal-info">
             <TabsList className="mb-6 grid w-full grid-cols-2">
-              <TabsTrigger value="personal-info">Thông tin cá nhân</TabsTrigger>
+              <TabsTrigger value="personal-info" >Thông tin cá nhân</TabsTrigger>
               <TabsTrigger value="change-password">Đổi mật khẩu</TabsTrigger>
             </TabsList>
 

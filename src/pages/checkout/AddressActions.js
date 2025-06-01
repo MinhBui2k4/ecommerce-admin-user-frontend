@@ -1,11 +1,19 @@
 import { useState } from "react";
-import { Button } from "../../components/ui/Button";    
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../../components/ui/AlertDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../components/ui/AlertDialog";
 import AddressForm from "./AddressForm";
 import { DELETE_ADDRESS } from "../../api/apiService";
 import { toast } from "react-toastify";
 
-export default function AddressActions({ address, onEdit, onDelete }) {
+export default function AddressActions({ address, onEdit, onDelete, hideDelete = false }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDelete = async () => {
@@ -26,23 +34,26 @@ export default function AddressActions({ address, onEdit, onDelete }) {
         onUpdateAddress={onEdit}
         addressToEdit={address}
         trigger={
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <button
+            className="h-8 w-8 flex items-center justify-center bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            title="Chỉnh sửa địa chỉ"
+          >
             <span className="text-xl">✏️</span>
-          </Button>
+          </button>
         }
       />
-
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
-        onClick={() => setShowDeleteDialog(true)}
-        disabled={address.isDefault}
-        title={address.isDefault ? "Không thể xóa địa chỉ mặc định" : "Xóa địa chỉ"}
-      >
-        <span className="text-xl">🗑️</span>
-      </Button>
-
+      {!hideDelete && (
+        <button
+          className={`h-8 w-8 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 hover:text-red-600 ${
+            address.isDefault ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          onClick={() => setShowDeleteDialog(true)}
+          disabled={address.isDefault}
+          title={address.isDefault ? "Không thể xóa địa chỉ mặc định" : "Xóa địa chỉ"}
+        >
+          <span className="text-xl">🗑️</span>
+        </button>
+      )}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -53,7 +64,10 @@ export default function AddressActions({ address, onEdit, onDelete }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
               Xóa
             </AlertDialogAction>
           </AlertDialogFooter>
