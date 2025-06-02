@@ -13,7 +13,7 @@ import AddressActions from "./AddressActions";
 import PaymentMethods from "./PaymentMethods";
 
 export default function CheckoutPage() {
-  const { detailedItems, getCartTotal, selectedItems, clearSelectedItems, fetchCart } = useCart();
+  const { detailedItems, setDetailedItems, cartItems, setCartItems, getCartTotal, selectedItems, clearSelectedItems, fetchCart } = useCart();
   const navigate = useNavigate();
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -50,10 +50,8 @@ export default function CheckoutPage() {
         const fetchedAddresses = response.content || [];
         setAddresses(fetchedAddresses);
         if (fetchedAddresses.length === 1) {
-          // Tự động chọn địa chỉ nếu chỉ có 1 địa chỉ
           setSelectedAddress(fetchedAddresses[0].id.toString());
         } else {
-          // Chọn địa chỉ mặc định nếu có, hoặc để null
           const defaultAddress = fetchedAddresses.find((addr) => addr.isDefault);
           setSelectedAddress(defaultAddress ? defaultAddress.id.toString() : null);
         }
@@ -195,11 +193,19 @@ export default function CheckoutPage() {
 
       const order = await CREATE_ORDER(orderData);
 
+      // Xóa các sản phẩm đã chọn khỏi giỏ hàng
       for (const id of selectedItems) {
         await REMOVE_FROM_CART(id);
       }
-      await fetchCart();
+
+      // Cập nhật trạng thái cục bộ ngay lập tức
+      setCartItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
+      setDetailedItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
       clearSelectedItems();
+
+      // Gọi fetchCart để đồng bộ dữ liệu từ server, nhưng không chờ nó hoàn tất trước khi điều hướng
+      fetchCart();
+
       toast.success("Đơn hàng đã được đặt thành công!");
       navigate(`/orders/${order.id}`);
     } catch (error) {

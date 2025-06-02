@@ -75,105 +75,112 @@ export default function FeaturedProducts() {
         </Link>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {products.map((product) => (
-          <Card
-            key={product.id}
-            className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="relative pt-4">
-               {product.new && (
-              <Badge
-                variant="info"
-                className="absolute left-2 top-2 z-10 rounded-md bg-blue-500 px-2 py-1 text-white shadow-md"
-              >
-                Mới
-              </Badge>
-            )}
-
-            {/* Badge "Giảm giá" */}
-            {product.sale && (
-              <Badge
-                variant="destructive"
-                className="absolute right-2 top-2 z-10 rounded-md bg-red-600 px-2 py-1 text-white shadow-md"
-              >
-                Giảm giá
-              </Badge>
-            )}
-              <Link to={`/product/${product.id}`}>
-                <div className="relative mx-auto h-48 w-48">
-                  <img
-                    src={`http://localhost:8080/api/products/image/${product.image}`}
-                    alt={product.name}
-                    className="object-contain w-full h-full transition-transform duration-300 hover:scale-105"
-                    onError={(e) => {
-                      e.target.src = "/images/product-placeholder.jpg";
-                    }}
-                  />
-                </div>
-              </Link>
-            </div>
-            <CardContent className="p-4">
-              <Link to={`/product/${product.id}`}>
-                <h3 className="mb-1 text-base font-semibold hover:text-red-600 md:text-lg">{product.name}</h3>
-              </Link>
-              <p className="mb-2 text-sm text-gray-600 line-clamp-1">{product.description}</p>
-              <div className="mb-2 flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <span
-                    key={i}
-                    className={`h-4 w-4 ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-200"}`}
+        {products.map((product) => {
+          const isOutOfStock = !product.availability || (product.quantity === 0); // Kiểm tra availability và quantity (nếu có)
+          return (
+            <Card
+              key={product.id}
+              className="overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+            >
+              <div className="relative pt-4">
+                {product.new && (
+                  <Badge
+                    variant="info"
+                    className="absolute left-2 top-2 z-10 rounded-md bg-blue-500 px-2 py-1 text-white shadow-md"
                   >
-                    ★
-                  </span>
-                ))}
-                <span className="ml-2 text-sm text-gray-600">({product.review || 0})</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-lg font-bold text-red-600 md:text-xl">{formatPrice(product.price)}</span>
-                {product.oldPrice && (
-                  <span className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.oldPrice)}</span>
+                    Mới
+                  </Badge>
                 )}
+                {product.sale && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute right-2 top-2 z-10 rounded-md bg-red-600 px-2 py-1 text-white shadow-md"
+                  >
+                    Giảm giá
+                  </Badge>
+                )}
+                <Link to={`/product/${product.id}`}>
+                  <div className="relative mx-auto h-48 w-48">
+                    <img
+                      src={`http://localhost:8080/api/products/image/${product.image}`}
+                      alt={product.name}
+                      className="object-contain w-full h-full transition-transform duration-300 hover:scale-105"
+                      onError={(e) => {
+                        e.target.src = "/images/product-placeholder.jpg";
+                      }}
+                    />
+                  </div>
+                </Link>
               </div>
-              <p className={`mt-2 text-sm ${product.availability ? "text-green-600" : "text-red-600"}`}>
-                {product.availability ? "Còn hàng" : "Hết hàng"}
-              </p>
-            </CardContent>
-            <CardFooter className="flex justify-between p-4 pt-0">
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label="Add to wishlist"
-                className={
-                  wishlistItems.some((item) => item.productId === product.id)
-                    ? "border-red-500 hover:border-red-600"
-                    : "border-gray-300 hover:border-gray-600"
-                }
-                onClick={() => handleToggleWishlist(product)}
-              >
-                <svg
+              <CardContent className="p-4">
+                <Link to={`/product/${product.id}`}>
+                  <h3 className="mb-1 text-base font-semibold hover:text-red-600 md:text-lg">{product.name}</h3>
+                </Link>
+                <p className="mb-2 text-sm text-gray-600 line-clamp-1">{product.description}</p>
+                <div className="mb-2 flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-4 w-4 ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-200"}`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                  <span className="ml-2 text-sm text-gray-600">({product.review || 0})</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-lg font-bold text-red-600 md:text-xl">{formatPrice(product.price)}</span>
+                  {product.oldPrice && (
+                    <span className="ml-2 text-sm text-gray-500 line-through">{formatPrice(product.oldPrice)}</span>
+                  )}
+                </div>
+                <p className={`mt-2 text-sm ${product.availability ? "text-green-600" : "text-red-600"}`}>
+                  {product.availability ? "Còn hàng" : "Hết hàng"}
+                </p>
+              </CardContent>
+              <CardFooter className="flex justify-between p-4 pt-0">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Add to wishlist"
                   className={
                     wishlistItems.some((item) => item.productId === product.id)
-                      ? "fill-red-500 stroke-red-500 h-5 w-5"
-                      : "fill-white stroke-gray-500 h-5 w-5 group-hover:fill-gray-600 group-hover:stroke-gray-600"
+                      ? "border-red-500 hover:border-red-600"
+                      : "border-gray-300 hover:border-gray-600"
                   }
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+                  onClick={() => handleToggleWishlist(product)}
                 >
-                  <path
-                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                  />
-                </svg>
-              </Button>
-              <Button
-                className="flex-1 ml-2"
-                onClick={() => handleAddToCart(product)}
-                disabled={!product.availability}
-              >
-                <span className="mr-2">🛒</span> Thêm vào giỏ
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+                  <svg
+                    className={
+                      wishlistItems.some((item) => item.productId === product.id)
+                        ? "fill-red-500 stroke-red-500 h-5 w-5"
+                        : "fill-white stroke-gray-500 h-5 w-5 group-hover:fill-gray-600 group-hover:stroke-gray-600"
+                    }
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                    />
+                  </svg>
+                </Button>
+                <Button
+                  className="flex-1 ml-2"
+                  onClick={() => handleAddToCart(product)}
+                  disabled={isOutOfStock}
+                >
+                  {isOutOfStock ? (
+                    "Hết hàng"
+                  ) : (
+                    <>
+                      <span className="mr-2">🛒</span> Thêm vào giỏ
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </section>
   );

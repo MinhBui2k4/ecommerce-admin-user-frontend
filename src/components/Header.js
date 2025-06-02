@@ -6,7 +6,7 @@ import { Badge } from "./ui/Badge";
 import { useCart } from "../contexts/CartContext";
 import { useWishlist } from "../contexts/WishlistContext";
 import { useMobile } from "../hooks/useMobile";
-import { GET_PROFILE } from "../api/apiService";
+import { useUser } from "../contexts/UserContext";
 
 export default function Header() {
   const location = useLocation();
@@ -18,20 +18,9 @@ export default function Header() {
   const { wishlistItems } = useWishlist();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user } = useUser();
   const isLoggedIn = !!localStorage.getItem("authToken");
   const [avatarError, setAvatarError] = useState(false);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      GET_PROFILE()
-        .then((data) => {
-          setUser(data);
-          setAvatarError(false); // Reset avatar error on new user data
-        })
-        .catch((error) => console.error("Failed to fetch profile:", error));
-    }
-  }, [isLoggedIn]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,7 +40,6 @@ export default function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
-    setUser(null);
     setIsUserMenuOpen(false);
     navigate("/login");
   };
@@ -133,46 +121,50 @@ export default function Header() {
             </form>
 
             {/* Wishlist */}
-            <Link to="/wishlist" className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Wishlist"
-                className="text-xl"
-              >
-                <svg
-                  className={wishlistItems.length > 0 ? "fill-red-500 stroke-red-500 h-5 w-5" : "fill-gray-300 stroke-gray-500 h-5 w-5"}
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+            {isLoggedIn && (
+              <Link to="/wishlist" className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Wishlist"
+                  className="text-xl"
                 >
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
-                {wishlistItems.length > 0 && (
-                  <Badge className="absolute -right-1 -top-1 h-5 w-5 text-xs flex items-center justify-center rounded-full bg-red-500 text-white">
-                    {wishlistItems.length}
-                  </Badge>
-                )}
-              </Button>
-            </Link>
+                  <svg
+                    className={wishlistItems.length > 0 ? "fill-red-500 stroke-red-500 h-5 w-5" : "fill-gray-300 stroke-gray-500 h-5 w-5"}
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                  {wishlistItems.length > 0 && (
+                    <Badge className="absolute -right-1 -top-1 h-5 w-5 text-xs flex items-center justify-center rounded-full bg-red-500 text-white">
+                      {wishlistItems.length}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            )}
 
             {/* Cart */}
-            <Link to="/cart" className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Shopping Cart"
-                className="text-xl"
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-gray-500">
-                  <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0020 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
-                </svg>
-                {cartItems.length > 0 && (
-                  <Badge className="absolute -right-1 -top-1 h-5 w-5 text-xs flex items-center justify-center rounded-full bg-red-500 text-white">
-                    {cartItems.length}
-                  </Badge>
-                )}
-              </Button>
-            </Link>
+            {isLoggedIn && (
+              <Link to="/cart" className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Shopping Cart"
+                  className="text-xl"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-gray-500">
+                    <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0020 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                  </svg>
+                  {cartItems.length > 0 && (
+                    <Badge className="absolute -right-1 -top-1 h-5 w-5 text-xs flex items-center justify-center rounded-full bg-red-500 text-white">
+                      {cartItems.length}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            )}
 
             {/* User Menu */}
             {isLoggedIn && user ? (

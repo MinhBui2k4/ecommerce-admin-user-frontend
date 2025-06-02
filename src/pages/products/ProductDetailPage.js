@@ -9,6 +9,7 @@ import { useCart } from "../../contexts/CartContext";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { GET_PRODUCT_BY_ID, GET_ALL_PRODUCTS, ADD_TO_CART, ADD_TO_WISHLIST, REMOVE_FROM_WISHLIST } from "../../api/apiService";
 import { toast } from "react-toastify";
+
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -105,10 +106,9 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = () => {
     handleAddToCart();
-    navigate("/checkout");
+    navigate("/cart");
   };
 
-  // Hàm để lấy URL ảnh đúng
   const getImageUrl = (image, isPrimary = false) => {
     const endpoint = isPrimary ? "image" : "images";
     return `http://localhost:8080/api/products/${endpoint}/${image}`;
@@ -137,6 +137,8 @@ export default function ProductDetailPage() {
       </div>
     );
   }
+
+  const isOutOfStock = product.availability !== "Còn hàng" || product.maxQuantity === 0; // Kiểm tra availability và maxQuantity
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -193,7 +195,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-         {/* Product Info */}
+        {/* Product Info */}
         <div>
           <h1 className="mb-2 text-2xl font-bold md:text-3xl">{product.name}</h1>
 
@@ -270,16 +272,26 @@ export default function ProductDetailPage() {
 
           {/* Actions */}
           <div className="mb-6 flex items-center gap-4 flex-wrap">
-            <Button className="flex-1" onClick={handleAddToCart} disabled={product.availability !== "Còn hàng"}>
-              <span className="mr-2">🛒</span> Thêm vào giỏ
+            <Button
+              className="flex-1"
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+            >
+              {isOutOfStock ? (
+                "Hết hàng"
+              ) : (
+                <>
+                  <span className="mr-2">🛒</span> Thêm vào giỏ
+                </>
+              )}
             </Button>
             <Button
               className="flex-1"
               variant="blue"
               onClick={handleBuyNow}
-              disabled={product.availability !== "Còn hàng"}
+              disabled={isOutOfStock}
             >
-              Mua ngay
+              {isOutOfStock ? "Hết hàng" : "Mua ngay"}
             </Button>
             <Button
               variant="outline"
@@ -407,7 +419,7 @@ export default function ProductDetailPage() {
                         ★
                       </span>
                     ))}
-                    <span className="ml-2 text-sm text-gray-600">({product.review })</span>
+                    <span className="ml-2 text-sm text-gray-600">({product.review})</span>
                   </div>
                   <div className="flex items-center">
                     <span className="text-lg font-bold text-red-600 md:text-xl">{formatPrice(product.price)}</span>
