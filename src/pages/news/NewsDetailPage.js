@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
-import Card, {  CardContent } from "../../components/ui/Card";
+import Card, { CardContent } from "../../components/ui/Card";
 import { GET_NEWS_BY_ID, GET_ALL_NEWS } from "../../api/apiService";
+import { getCachedNews, getCachedNewsById } from "../../utils/newsCache";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -16,18 +17,19 @@ export default function NewsDetailPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      GET_NEWS_BY_ID(id),
-      GET_ALL_NEWS({ pageNumber: 0, pageSize: 3 }),
-    ])
-      .then(([newsData, allNews]) => {
+    const fetchNewsDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [newsData, allNews] = await Promise.all([
+          getCachedNewsById(GET_NEWS_BY_ID, id),
+          getCachedNews(GET_ALL_NEWS, { pageNumber: 0, pageSize: 3 }),
+        ]);
         setNews({
           ...newsData,
-          author: "TechStore Editor", // Giả lập
-          category: "Công nghệ", // Giả lập
-          tags: ["Công nghệ", "Tin tức"], // Giả lập
+          author: "TechStore Editor",
+          category: "Công nghệ",
+          tags: ["Công nghệ", "Tin tức"],
           date: new Date(newsData.createdAt).toLocaleDateString("vi-VN"),
         });
         setRelatedNews(
@@ -39,13 +41,15 @@ export default function NewsDetailPage() {
               date: new Date(item.createdAt).toLocaleDateString("vi-VN"),
             }))
         );
-        setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Failed to fetch news:", error);
         setError("Không thể tải bài viết. Vui lòng thử lại sau.");
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchNewsDetails();
   }, [id]);
 
   const handleCopyLink = () => {
@@ -58,8 +62,51 @@ export default function NewsDetailPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex h-96 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+        <div className="mb-6 animate-pulse">
+          <div className="h-8 w-24 bg-gray-200 rounded"></div>
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <div className="space-y-4">
+              <div className="h-10 bg-gray-200 rounded w-3/4"></div>
+              <div className="flex flex-wrap items-center gap-4">
+                {[...Array(3)].map((_, index) => (
+                  <div key={index} className="h-4 bg-gray-200 rounded w-20"></div>
+                ))}
+              </div>
+              <div className="relative aspect-video w-full bg-gray-200 rounded-lg"></div>
+              <div className="space-y-3">
+                {[...Array(5)].map((_, index) => (
+                  <div key={index} className="h-4 bg-gray-200 rounded w-full"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="border rounded-lg p-4 md:p-6 animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="h-16 w-16 bg-gray-200 rounded-full"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                </div>
+              </div>
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+            </div>
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+              {[...Array(2)].map((_, index) => (
+                <div key={index} className="flex space-x-4 border rounded-lg p-3 animate-pulse">
+                  <div className="h-16 w-16 bg-gray-200 rounded-md"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );

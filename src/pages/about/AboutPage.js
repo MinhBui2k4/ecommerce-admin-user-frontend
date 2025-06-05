@@ -1,49 +1,33 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import  Card,{ CardContent } from "../../components/ui/Card";
+import Card, { CardContent } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { GET_ALL_NEWS } from "../../api/apiService";
+import { getCachedNews } from "../../utils/newsCache";
+import techstoreImage from "../../assets/images/img_home.png";
+
 
 export default function AboutPage() {
   const [newsItems, setNewsItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    GET_ALL_NEWS({ pageNumber: 0, pageSize: 3 })
-      .then((response) => {
+    const fetchNews = async () => {
+      try {
+        const response = await getCachedNews(GET_ALL_NEWS, { pageNumber: 0, pageSize: 3 });
         setNewsItems(response.content || []);
-        setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Failed to fetch news:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchNews();
   }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Hero Section */}
-      <section className="mb-12 md:mb-16">
-        <div className="relative h-[300px] overflow-hidden rounded-lg md:h-[400px]">
-          {/* <img
-            src="/images/about-hero.jpg"
-            alt="TechStore Team"
-            className="object-cover w-full h-full"
-            onError={(e) => {
-              e.target.src = "/images/placeholder.jpg";
-            }}
-          /> */}
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white">
-              <h1 className="mb-4 text-3xl font-bold md:text-4xl lg:text-5xl">Về TechStore</h1>
-              <p className="mx-auto max-w-2xl text-base md:text-lg">
-                Cửa hàng điện tử hàng đầu tại Việt Nam, chuyên cung cấp các sản phẩm công nghệ chính hãng
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Our Story */}
       <section className="mb-12 md:mb-16">
@@ -66,15 +50,15 @@ export default function AboutPage() {
               </p>
             </div>
           </div>
-          <div className="relative h-[300px] overflow-hidden rounded-lg md:h-full">
-            {/* <img
-              src="/images/about-store.jpg"
+          <div className="relative max-w-[500px] w-full rounded-lg overflow-hidden">
+            <img
+              src={techstoreImage}
               alt="TechStore Store"
-              className="object-cover w-full h-full"
+              className="object-cover w-full h-auto"
               onError={(e) => {
                 e.target.src = "/images/placeholder.jpg";
               }}
-            /> */}
+            />
           </div>
         </div>
       </section>

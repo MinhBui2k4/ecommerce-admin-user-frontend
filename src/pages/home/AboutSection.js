@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
+import techstoreImage from "../../assets/images/techstore.png";
 
 const benefits = [
   "Sản phẩm chính hãng 100%",
@@ -14,16 +15,14 @@ export default function AboutSection() {
   return (
     <section className="container mx-auto px-4 py-16">
       <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
-        <div className="relative h-[400px] overflow-hidden rounded-lg md:h-full">
-          {/* <img
-            src="/images/about-techstore.jpg"
-            alt="TechStore Store"
+        <div className="relative h-[400px] overflow-hidden rounded-xl shadow-lg md:h-full">
+          <img
+            src={techstoreImage}
+            alt="TechStore"
             className="object-cover w-full h-full"
-            onError={(e) => {
-              e.target.src = "/images/placeholder.jpg";
-            }}
-          /> */}
+          />
         </div>
+
         <div className="flex flex-col justify-center">
           <h2 className="mb-6 text-3xl font-bold">Về TechStore</h2>
           <p className="mb-6 text-gray-700">

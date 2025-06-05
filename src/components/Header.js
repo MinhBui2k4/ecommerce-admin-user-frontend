@@ -7,6 +7,10 @@ import { useCart } from "../contexts/CartContext";
 import { useWishlist } from "../contexts/WishlistContext";
 import { useMobile } from "../hooks/useMobile";
 import { useUser } from "../contexts/UserContext";
+import { clearFilterCache } from "../utils/filterCache";
+import { clearProductCache } from "../utils/productCache";
+import { clearHomeCache } from "../utils/homeCache";
+import { clearNewsCache } from "../utils/newsCache";
 
 export default function Header() {
   const location = useLocation();
@@ -40,6 +44,10 @@ export default function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
+    clearFilterCache();
+    clearProductCache();
+    clearHomeCache();
+    clearNewsCache();
     setIsUserMenuOpen(false);
     navigate("/login");
   };

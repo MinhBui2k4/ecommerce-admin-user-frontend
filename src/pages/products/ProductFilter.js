@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Checkbox } from "../../components/ui/Checkbox";
-import { Label } from "../../components/ui/Label";  
+import { Label } from "../../components/ui/Label";
 import { Button } from "../../components/ui/Button";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../../components/ui/Accordion";
 import { GET_ALL_BRANDS, GET_ALL_CATEGORIES } from "../../api/apiService";
+import { getCachedBrands, getCachedCategories } from "../../utils/filterCache";
 import { toast } from "react-toastify";
 
 export default function ProductFilter({ onFilterChange, onReset }) {
@@ -28,20 +29,24 @@ export default function ProductFilter({ onFilterChange, onReset }) {
   ];
 
   useEffect(() => {
-    Promise.all([
-      GET_ALL_BRANDS(),
-      GET_ALL_CATEGORIES(),
-    ])
-      .then(([brandsData, categoriesData]) => {
-        setBrands(brandsData.content || []);
-        setCategories(categoriesData.content || []);
-        setLoading(false);
-      })
-      .catch((error) => {
+    const fetchFilters = async () => {
+      try {
+        setLoading(true);
+        const [brandsData, categoriesData] = await Promise.all([
+          getCachedBrands(GET_ALL_BRANDS),
+          getCachedCategories(GET_ALL_CATEGORIES),
+        ]);
+        setBrands(brandsData);
+        setCategories(categoriesData);
+      } catch (error) {
         console.error("Failed to fetch brands/categories:", error);
         toast.error("Không thể tải bộ lọc");
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchFilters();
   }, []);
 
   const handleFilterChange = (type, value) => {

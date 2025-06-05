@@ -37,6 +37,8 @@ export default function Wishlist() {
               description: product.description,
               rating: product.rating || 0,
               oldPrice: product.oldPrice || null,
+              quantity: product.quantity, // Thêm quantity
+              availability: product.availability, // Thêm availability
             };
           });
 
@@ -105,71 +107,84 @@ export default function Wishlist() {
         Danh sách yêu thích ({totalWishlistItems} sản phẩm)
       </h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {detailedItems.map((item) => (
-          <Card
-            key={item.productId}
-            className="overflow-hidden transform transition-transform duration-300 hover:scale-105"
-          >
-            <div className="relative pt-4">
-              <Link to={`/product/${item.productId}`}>
-                <div className="relative mx-auto h-48 w-48">
-                  <img
-                    src={
-                      item.image
-                        ? `http://localhost:8080/api/products/image/${item.image}`
-                        : "/images/product-placeholder.jpg"
-                    }
-                    alt={item.productName}
-                    className="object-contain w-full h-full transition-transform duration-300 hover:scale-105"
-                    onError={(e) => {
-                      e.target.src = "/images/product-placeholder.jpg";
-                    }}
-                  />
+        {detailedItems.map((item) => {
+          const isOutOfStock = !item.availability || (item.quantity === 0);
+          return (
+            <Card
+              key={item.productId}
+              className="overflow-hidden transform transition-transform duration-300 hover:scale-105"
+            >
+              <div className="relative pt-4">
+                <Link to={`/product/${item.productId}`}>
+                  <div className="relative mx-auto h-48 w-48">
+                    <img
+                      src={
+                        item.image
+                          ? `http://localhost:8080/api/products/image/${item.image}`
+                          : "/images/product-placeholder.jpg"
+                      }
+                      alt={item.productName}
+                      className="object-contain w-full h-full transition-transform duration-300 hover:scale-105"
+                      onError={(e) => {
+                        e.target.src = "/images/product-placeholder.jpg";
+                      }}
+                    />
+                  </div>
+                </Link>
+              </div>
+              <CardContent className="p-4">
+                <Link to={`/product/${item.productId}`}>
+                  <h3 className="mb-1 text-lg font-semibold hover:text-red-600">{item.productName}</h3>
+                </Link>
+                <p className="mb-2 text-sm text-gray-600 line-clamp-2">
+                  {item.description || "Không có mô tả"}
+                </p>
+                <div className="mb-2 flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-4 w-4 ${i < Math.floor(item.rating || 0) ? "text-yellow-400" : "text-gray-200"}`}
+                    >
+                      ★
+                    </span>
+                  ))}
                 </div>
-              </Link>
-            </div>
-            <CardContent className="p-4">
-              <Link to={`/product/${item.productId}`}>
-                <h3 className="mb-1 text-lg font-semibold hover:text-red-600">{item.productName}</h3>
-              </Link>
-              <p className="mb-2 text-sm text-gray-600 line-clamp-2">
-                {item.description || "Không có mô tả"}
-              </p>
-              <div className="mb-2 flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <span
-                    key={i}
-                    className={`h-4 w-4 ${i < Math.floor(item.rating || 0) ? "text-yellow-400" : "text-gray-200"}`}
-                  >
-                    ★
-                  </span>
-                ))}
-              </div>
-              <div className="flex items-center">
-                <span className="text-xl font-bold text-red-600">{formatPrice(item.productPrice)}</span>
-                {item.oldPrice && (
-                  <span className="ml-2 text-sm text-gray-500 line-through">
-                    {formatPrice(item.oldPrice)}
-                  </span>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between p-4 pt-0">
-              <Button
-                variant="outline"
-                size="icon"
-                className="text-red-500 hover:bg-red-50 hover:text-red-600"
-                onClick={() => handleRemoveFromWishlist(item.productId, item.productName)}
-                aria-label="Remove from wishlist"
-              >
-                <span>🗑️</span>
-              </Button>
-              <Button className="flex-1 ml-2" onClick={() => handleAddToCart(item)}>
-                <span className="mr-2">🛒</span> Thêm vào giỏ
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+                <div className="flex items-center">
+                  <span className="text-xl font-bold text-red-600">{formatPrice(item.productPrice)}</span>
+                  {item.oldPrice && (
+                    <span className="ml-2 text-sm text-gray-500 line-through">
+                      {formatPrice(item.oldPrice)}
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between p-4 pt-0">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                  onClick={() => handleRemoveFromWishlist(item.productId, item.productName)}
+                  aria-label="Remove from wishlist"
+                >
+                  <span>🗑️</span>
+                </Button>
+                <Button
+                  className="flex-1 ml-2"
+                  onClick={() => handleAddToCart(item)}
+                  disabled={isOutOfStock}
+                >
+                  {isOutOfStock ? (
+                    "Hết hàng"
+                  ) : (
+                    <>
+                      <span className="mr-2">🛒</span> Thêm vào giỏ
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { GET_HERO_SECTIONS } from "../../api/apiService";
+import { getCachedHeroSlides } from "../../utils/homeCache";
 
 export default function HeroSection() {
   const [slides, setSlides] = useState([]);
@@ -9,20 +10,11 @@ export default function HeroSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    GET_HERO_SECTIONS({ pageNumber: 0, pageSize: 5 })
-      .then((response) => {
-        const fetchedSlides = response.content.map((item) => ({
-          id: item.id,
-          title: item.heading,
-          description: item.subheading,
-          image: `http://localhost:8080/api/hero/image/${item.backgroundImage}`,
-          cta: "Mua ngay",
-          link: "/products",
-        }));
+    const fetchSlides = async () => {
+      try {
+        const fetchedSlides = await getCachedHeroSlides(GET_HERO_SECTIONS);
         setSlides(fetchedSlides);
-        setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Failed to fetch hero sections:", error);
         setSlides([
           {
@@ -34,8 +26,12 @@ export default function HeroSection() {
             link: "/products",
           },
         ]);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchSlides();
   }, []);
 
   useEffect(() => {
@@ -47,8 +43,22 @@ export default function HeroSection() {
     }
   }, [slides]);
 
-  if (loading)
-    return <p className="text-center py-16">Đang tải...</p>;
+  if (loading) {
+    return (
+      <section className="w-full relative h-[500px] md:h-[600px] overflow-hidden animate-pulse">
+        <div className="absolute inset-0 bg-gray-200"></div>
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full container mx-auto px-4">
+            <div className="max-w-xl">
+              <div className="h-12 bg-gray-300 rounded mb-4 w-3/4"></div>
+              <div className="h-6 bg-gray-300 rounded mb-8 w-1/2"></div>
+              <div className="h-10 bg-gray-300 rounded w-32"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="w-full relative h-[500px] md:h-[600px] overflow-hidden">
@@ -60,7 +70,7 @@ export default function HeroSection() {
           }`}
         >
           <div className="relative h-full w-full">
-            {/* <img
+            <img
               src={slide.image}
               alt={slide.title}
               className="object-cover w-full h-full"
@@ -75,7 +85,7 @@ export default function HeroSection() {
                 maxWidth: "100%",
                 height: "100%"
               }}
-            /> */}
+            />
             <div className="absolute inset-0 bg-black/40">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full container mx-auto px-4">

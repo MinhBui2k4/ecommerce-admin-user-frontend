@@ -6,7 +6,7 @@ import { Checkbox } from "../../components/ui/Checkbox";
 import { Label } from "../../components/ui/Label";
 import Card, { CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
 
-import { LOGIN } from "../../api/apiService";
+import { LOGIN, GET_PROFILE } from "../../api/apiService";
 import { toast } from "react-toastify";
 
 export default function Login() {
@@ -30,10 +30,25 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await LOGIN({ email: formData.email, password: formData.password });
-      localStorage.setItem("authToken", response.token);
+      // Gọi API đăng nhập
+      const loginResponse = await LOGIN({ email: formData.email, password: formData.password });
+      localStorage.setItem("authToken", loginResponse.token);
+      
+      // Gọi API GET_PROFILE để lấy thông tin chi tiết người dùng, bao gồm roles
+      const profileResponse = await GET_PROFILE();
+      
       toast.success("Đăng nhập thành công!");
-      navigate("/");
+
+      // Kiểm tra vai trò của người dùng
+      const roles = profileResponse.roles || [];
+      const isAdmin = roles.some(role => role.name === "ADMIN" || role.id === 1);
+
+      // Điều hướng dựa trên vai trò
+      if (isAdmin) {
+        window.location.href = "/";// Chuyển hướng đến localhost:5173 nếu là ADMIN
+      } else {
+        navigate("/"); // Chuyển hướng đến trang chủ nếu không phải ADMIN
+      }
     } catch (error) {
       toast.error("Đăng nhập thất bại: Sai email hoặc mật khẩu");
     }

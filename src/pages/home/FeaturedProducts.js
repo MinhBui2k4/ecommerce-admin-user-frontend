@@ -6,6 +6,7 @@ import { Badge } from "../../components/ui/Badge";
 import { useCart } from "../../contexts/CartContext";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { GET_ALL_PRODUCTS, ADD_TO_CART, ADD_TO_WISHLIST, REMOVE_FROM_WISHLIST } from "../../api/apiService";
+import { getCachedFeaturedProducts } from "../../utils/homeCache";
 import { toast } from "react-toastify";
 
 export default function FeaturedProducts() {
@@ -15,16 +16,19 @@ export default function FeaturedProducts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    GET_ALL_PRODUCTS({ pageNumber: 0, pageSize: 8 })
-      .then((response) => {
-        setProducts(response.content);
-        setLoading(false);
-      })
-      .catch((error) => {
+    const fetchProducts = async () => {
+      try {
+        const fetchedProducts = await getCachedFeaturedProducts(GET_ALL_PRODUCTS);
+        setProducts(fetchedProducts);
+      } catch (error) {
         console.error("Failed to fetch products:", error);
-        setLoading(false);
         toast.error("Không thể tải sản phẩm");
-      });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   const formatPrice = (price) => {
@@ -64,7 +68,31 @@ export default function FeaturedProducts() {
     }
   };
 
-  if (loading) return <p className="text-center py-8">Đang tải...</p>;
+  if (loading) {
+    return (
+      <section className="container mx-auto px-4 py-8">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold md:text-3xl animate-pulse">Sản phẩm nổi bật</h2>
+          <Button variant="outline" className="animate-pulse">
+            Xem tất cả
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {[...Array(8)].map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="relative pt-4 h-48 w-full bg-gray-200 rounded-t-lg"></div>
+              <div className="p-4 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="container mx-auto px-4 py-8">
