@@ -54,7 +54,7 @@ export function SelectContent({ children, value, onChange, isOpen }) {
   if (!isOpen) return null;
   
   return (
-    <div className="absolute z-10 mt-1 w-full rounded-md border bg-white shadow-lg">
+    <div className="absolute z-50 mt-1 w-full rounded-md border bg-white shadow-lg">
       {React.Children.map(children, (child) =>
         React.cloneElement(child, { selectedValue: value, onSelect: onChange })
       )}

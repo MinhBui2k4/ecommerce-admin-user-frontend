@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import Card, { CardContent, CardFooter } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -14,6 +14,7 @@ export default function FeaturedProducts() {
   const { wishlistItems, fetchWishlist } = useWishlist();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -39,6 +40,12 @@ export default function FeaturedProducts() {
   };
 
   const handleAddToCart = async (product) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast.error("Vui lòng đăng nhập trước khi thêm vào giỏ hàng!");
+      navigate("/login");
+      return;
+    }
     try {
       await ADD_TO_CART({ productId: product.id, quantity: 1 });
       fetchCart();
@@ -49,6 +56,12 @@ export default function FeaturedProducts() {
   };
 
   const handleToggleWishlist = async (product) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast.error("Vui lòng đăng nhập trước khi thêm vào danh sách yêu thích!");
+      navigate("/login");
+      return;
+    }
     try {
       if (wishlistItems.some((item) => item.productId === product.id)) {
         await REMOVE_FROM_WISHLIST(product.id);

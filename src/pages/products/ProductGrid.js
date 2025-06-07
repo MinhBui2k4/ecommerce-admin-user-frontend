@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Card, { CardContent, CardFooter } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
@@ -41,6 +41,7 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
   });
   const [loading, setLoading] = useState(true);
   const [lastParams, setLastParams] = useState(null);
+  const navigate = useNavigate();
 
   // Đặt lại pageNumber khi filters thay đổi
   useEffect(() => {
@@ -104,12 +105,18 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
   const handlePageChange = (pageNumber) => {
     setPagination((prev) => ({ ...prev, pageNumber: pageNumber - 1 }));
     window.scrollTo({
-      top: document.getElementById("product-grid")?.offsetTop || 0,
+      top: document.getElementId("product-grid")?.offsetTop || 0,
       behavior: "smooth",
     });
   };
 
   const handleAddToCart = async (product) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast.error("Vui lòng đăng nhập trước khi thêm vào giỏ hàng!");
+      navigate("/login");
+      return;
+    }
     try {
       await ADD_TO_CART({ productId: product.id, quantity: 1 });
       fetchCart();
@@ -120,6 +127,12 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
   };
 
   const handleToggleWishlist = async (product) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast.error("Vui lòng đăng nhập trước khi thêm vào danh sách yêu thích!");
+      navigate("/login");
+      return;
+    }
     try {
       if (wishlistItems.some((item) => item.productId === product.id)) {
         await REMOVE_FROM_WISHLIST(product.id);
@@ -259,4 +272,4 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
       )}
     </div>
   );
-} 
+}

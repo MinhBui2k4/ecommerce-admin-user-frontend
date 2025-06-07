@@ -10,11 +10,11 @@ import { toast } from "react-toastify";
 import { Label } from "../../components/ui/Label";
 import { Separator } from "../../components/ui/Separator";
 
-const validCoupons = [
-  { code: "WELCOME10", discount: 0.1, type: "percentage" },
-  { code: "FREESHIP", discount: 30000, type: "fixed" },
-  { code: "BLACKFRIDAY", discount: 0.3, type: "percentage" },
-];
+// const validCoupons = [
+//   { code: "WELCOME10", discount: 0.1, type: "percentage" },
+//   { code: "FREESHIP", discount: 30000, type: "fixed" },
+//   { code: "BLACKFRIDAY", discount: 0.3, type: "percentage" },
+// ];
 
 export default function Cart() {
   const {
@@ -156,25 +156,25 @@ export default function Cart() {
     }
   };
 
-  const applyCoupon = () => {
-    const coupon = validCoupons.find((c) => c.code === couponCode);
-    if (!coupon) {
-      setCouponError("Mã giảm giá không hợp lệ");
-      setAppliedCoupon(null);
-      return;
-    }
-    setCouponError("");
-    setAppliedCoupon(coupon);
-    toast.success(`Mã ${coupon.code} đã được áp dụng`);
-  };
+  // const applyCoupon = () => {
+  //   const coupon = validCoupons.find((c) => c.code === couponCode);
+  //   if (!coupon) {
+  //     setCouponError("Mã giảm giá không hợp lệ");
+  //     setAppliedCoupon(null);
+  //     return;
+  //   }
+  //   setCouponError("");
+  //   setAppliedCoupon(coupon);
+  //   toast.success(`Mã ${coupon.code} đã được áp dụng`);
+  // };
 
-  const selectCoupon = (code) => {
-    setCouponCode(code);
-    const coupon = validCoupons.find((c) => c.code === code);
-    setCouponError("");
-    setAppliedCoupon(coupon);
-    toast.success(`Mã ${coupon.code} đã được áp dụng`);
-  };
+  // const selectCoupon = (code) => {
+  //   setCouponCode(code);
+  //   const coupon = validCoupons.find((c) => c.code === code);
+  //   setCouponError("");
+  //   setAppliedCoupon(coupon);
+  //   toast.success(`Mã ${coupon.code} đã được áp dụng`);
+  // };
 
   const clearCoupon = () => {
     setCouponCode("");
@@ -193,7 +193,7 @@ export default function Cart() {
       setDetailedItems([]);
       setSelectedItems([]);
       setSelectAll(false);
-      toast.info("Đã xóa toàn bộ giỏ hàng");
+      toast.success("Đã xóa toàn bộ giỏ hàng");
     } catch (error) {
       console.error("Error clearing cart:", error);
       toast.error("Không thể xóa giỏ hàng");
@@ -361,7 +361,7 @@ export default function Cart() {
                 <CardTitle>Tóm tắt đơn hàng</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="coupon" className="text-sm font-medium">
                     Mã giảm giá
                   </Label>
@@ -415,7 +415,7 @@ export default function Cart() {
                       </div>
                     </div>
                   )}
-                </div>
+                </div> */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Phương thức vận chuyển</Label>
                   <div className="space-y-2">

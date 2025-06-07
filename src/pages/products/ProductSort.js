@@ -47,7 +47,7 @@ export default function ProductSort({ onSortChange, totalItems }) {
       <div className="flex items-center space-x-2">
         <span className="text-sm font-semibold">Hiển thị:</span>
         <span className="ml-4 text-sm text-gray-600">
-           1-{Math.min(totalItems, 9)} của {totalItems} sản phẩm
+          1-{Math.min(totalItems, 9)} của {totalItems} sản phẩm
         </span>
       </div>
     </div>
