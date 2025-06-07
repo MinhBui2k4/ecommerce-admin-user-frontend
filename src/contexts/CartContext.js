@@ -90,13 +90,24 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    console.log("CartContext useEffect, token:", token);
+    const savedSelectedItems = localStorage.getItem("selectedCartItems");
+    if (savedSelectedItems) {
+      setSelectedItems(JSON.parse(savedSelectedItems));
+    }
     if (token) {
       fetchCart();
     } else {
       setLoading(false);
     }
   }, [fetchCart]);
+
+  useEffect(() => {
+    if (selectedItems.length > 0) {
+      localStorage.setItem("selectedCartItems", JSON.stringify(selectedItems));
+    } else {
+      localStorage.removeItem("selectedCartItems");
+    }
+  }, [selectedItems]);
 
   return (
     <CartContext.Provider

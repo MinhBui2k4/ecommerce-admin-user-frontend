@@ -28,6 +28,7 @@ import TermsOfServicePage from './pages/policy/TermsOfServicePage';
 import ReturnPolicyPage from './pages/policy/ReturnPolicyPage';
 import UnauthorizedPage from './pages/auth/UnauthorizedPage';
 import NotFoundPage from './pages/NotFoundPage';
+import MoMoReturnPage from './pages/checkout/MoMoReturnPage';
 
 const router = createBrowserRouter([
   {
@@ -124,6 +125,10 @@ const router = createBrowserRouter([
       {
         path: "/unauthorized",
         element: <UnauthorizedPage />,
+      },
+       {
+        path: "/checkout/return",
+        element: <MoMoReturnPage />,
       },
     ],
   },

@@ -6,14 +6,14 @@ import { Label } from "../../components/ui/Label";
 import { Textarea } from "../../components/ui/Textarea";
 import { Separator } from "../../components/ui/Separator";
 import { useCart } from "../../contexts/CartContext";
-import { GET_USER_ADDRESSES, CREATE_ORDER, REMOVE_FROM_CART } from "../../api/apiService";
+import { GET_USER_ADDRESSES, CREATE_ORDER, REMOVE_FROM_CART, CREATE_MOMO_PAYMENT } from "../../api/apiService";
 import { toast } from "react-toastify";
 import AddressForm from "./AddressForm";
 import AddressActions from "./AddressActions";
 import PaymentMethods from "./PaymentMethods";
 
 export default function CheckoutPage() {
-  const { detailedItems, setDetailedItems, cartItems, setCartItems, getCartTotal, selectedItems, clearSelectedItems, fetchCart } = useCart();
+  const { detailedItems, setDetailedItems, cartItems, setCartItems, getCartTotal, selectedItems, setSelectedItems, clearSelectedItems, fetchCart } = useCart();
   const navigate = useNavigate();
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -63,6 +63,13 @@ export default function CheckoutPage() {
         setLoading(false);
       });
   }, [navigate]);
+
+  useEffect(() => {
+    const savedSelectedItems = localStorage.getItem("selectedCartItems");
+    if (savedSelectedItems && JSON.parse(savedSelectedItems).length > 0) {
+      setSelectedItems(JSON.parse(savedSelectedItems));
+    }
+  }, []);
 
   const handleAddAddress = (newAddress) => {
     setAddresses((prev) =>
@@ -184,7 +191,7 @@ export default function CheckoutPage() {
       const orderData = {
         userId: 1, // TODO: Thay bằng logic lấy userId từ token
         shippingCost: shipping,
-        paymentMethodId: paymentMethod === "cod" ? 1 : parseInt(paymentMethod),
+        paymentMethodId: paymentMethod === "cod" || paymentMethod === "momo" ? 1 : parseInt(paymentMethod),
         shippingAddressId: parseInt(selectedAddress),
         items,
       };
@@ -193,28 +200,39 @@ export default function CheckoutPage() {
 
       const order = await CREATE_ORDER(orderData);
 
-      // Xóa các sản phẩm đã chọn khỏi giỏ hàng
-      for (const id of selectedItems) {
-        await REMOVE_FROM_CART(id);
+      if (paymentMethod === "momo") {
+        const response = await CREATE_MOMO_PAYMENT(
+          order.id,
+          `Thanh toán đơn hàng #${order.id}`,
+          Math.round(total) // Truyền amount từ total
+        );
+        window.location.href = response.payUrl; // Chuyển hướng đến MoMo với payUrl
+        // Lưu originalOrderId để kiểm tra sau khi thanh toán
+        localStorage.setItem("momoOriginalOrderId", response.originalOrderId);
+      } else {
+        // Xóa các sản phẩm đã chọn khỏi giỏ hàng
+        for (const id of selectedItems) {
+          await REMOVE_FROM_CART(id);
+        }
+
+        // Cập nhật trạng thái cục bộ ngay lập tức
+        setCartItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
+        setDetailedItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
+        clearSelectedItems();
+
+        // Gọi fetchCart để đồng bộ dữ liệu từ server
+        fetchCart();
+
+        toast.success("Đơn hàng đã được đặt thành công!");
+        navigate(`/orders/${order.id}`);
       }
-
-      // Cập nhật trạng thái cục bộ ngay lập tức
-      setCartItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
-      setDetailedItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
-      clearSelectedItems();
-
-      // Gọi fetchCart để đồng bộ dữ liệu từ server, nhưng không chờ nó hoàn tất trước khi điều hướng
-      fetchCart();
-
-      toast.success("Đơn hàng đã được đặt thành công!");
-      navigate(`/orders/${order.id}`);
     } catch (error) {
       console.error("Order submission error:", error);
       if (error.response?.status === 401) {
         toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
         navigate("/login");
       } else {
-        toast.error("Không thể đặt đơn hàng");
+        toast.error("Không thể đặt đơn hàng: " + (error.response?.data?.error || error.message));
       }
     }
   };
@@ -243,9 +261,14 @@ export default function CheckoutPage() {
         <h1 className="mb-6 text-2xl font-bold md:text-3xl">Thanh toán</h1>
         <div className="text-center">
           <p className="text-gray-500">Vui lòng chọn ít nhất một sản phẩm trong giỏ hàng để thanh toán.</p>
-          <Link to="/cart">
-            <Button className="mt-4">Quay lại giỏ hàng</Button>
-          </Link>
+          <div className="mt-4 space-x-4">
+            <Link to="/cart">
+              <Button className="mt-4">Quay lại giỏ hàng</Button>
+            </Link>
+            <Link to="/">
+              <Button variant="outline" className="mt-4">Quay lại trang chủ</Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
