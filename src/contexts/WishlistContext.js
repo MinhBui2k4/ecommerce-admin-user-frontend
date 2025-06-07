@@ -29,6 +29,12 @@ export function WishlistProvider({ children }) {
     debounce(async (pageNumber = 0, pageSize = 100) => {
       try {
         console.log(`Fetching wishlist: pageNumber=${pageNumber}, pageSize=${pageSize}`);
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          setWishlistItems([]);
+          setPagination((prev) => ({ ...prev, totalElements: 0, totalPages: 0 }));
+          return;
+        }
         const response = await GET_WISHLIST({ pageNumber, pageSize });
         console.log("Wishlist response:", response);
 
@@ -50,10 +56,7 @@ export function WishlistProvider({ children }) {
   );
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      fetchWishlist();
-    }
+    fetchWishlist();
   }, [fetchWishlist]);
 
   return (

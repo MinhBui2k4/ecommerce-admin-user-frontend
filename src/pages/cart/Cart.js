@@ -106,7 +106,7 @@ export default function Cart() {
 
   const handleCheckout = () => {
     if (selectedItems.length === 0) {
-      toast.error("Chọn sản phẩm trước khi thanh toán");
+      toast.error("Vui lòng chọn ít nhất một sản phẩm để thanh toán");
       return;
     }
     navigate("/checkout", { state: { selectedItems } });
@@ -163,6 +163,14 @@ export default function Cart() {
       setAppliedCoupon(null);
       return;
     }
+    setCouponError("");
+    setAppliedCoupon(coupon);
+    toast.success(`Mã ${coupon.code} đã được áp dụng`);
+  };
+
+  const selectCoupon = (code) => {
+    setCouponCode(code);
+    const coupon = validCoupons.find((c) => c.code === code);
     setCouponError("");
     setAppliedCoupon(coupon);
     toast.success(`Mã ${coupon.code} đã được áp dụng`);
@@ -385,6 +393,28 @@ export default function Cart() {
                       </Button>
                     </div>
                   )}
+                  {validCoupons.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm font-medium mb-2">Mã giảm giá có sẵn:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {validCoupons.map((coupon) => (
+                          <Button
+                            key={coupon.code}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => selectCoupon(coupon.code)}
+                            className={`text-sm ${
+                              appliedCoupon?.code === coupon.code
+                                ? "bg-blue-100 text-blue-700"
+                                : "hover:bg-blue-50"
+                            }`}
+                          >
+                            {coupon.code}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Phương thức vận chuyển</Label>
@@ -450,7 +480,6 @@ export default function Cart() {
                 <Button
                   className="w-full px-8 py-3"
                   size="lg"
-                  disabled={selectedItems.length === 0}
                   onClick={handleCheckout}
                 >
                   Tiến hành thanh toán <span className="ml-2">➡️</span>

@@ -30,6 +30,15 @@ export function CartProvider({ children }) {
       console.log("fetchCart called with token:", localStorage.getItem("authToken"));
       try {
         setLoading(true);
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          setCartItems([]);
+          setDetailedItems([]);
+          setSelectedItems([]);
+          localStorage.removeItem("selectedCartItems");
+          if (isMounted) setLoading(false);
+          return;
+        }
         const response = await GET_CART();
         const items = response.content[0]?.items || [];
 
@@ -97,7 +106,10 @@ export function CartProvider({ children }) {
     if (token) {
       fetchCart();
     } else {
-      setLoading(false);
+      setCartItems([]);
+      setDetailedItems([]);
+      setSelectedItems([]);
+      localStorage.removeItem("selectedCartItems");
     }
   }, [fetchCart]);
 

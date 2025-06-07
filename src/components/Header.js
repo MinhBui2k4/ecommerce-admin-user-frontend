@@ -18,8 +18,8 @@ export default function Header() {
   const isMobile = useMobile();
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { cartItems } = useCart();
-  const { wishlistItems } = useWishlist();
+  const { cartItems, fetchCart } = useCart();
+  const { wishlistItems, fetchWishlist } = useWishlist();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useUser();
@@ -33,6 +33,13 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchCart();
+      fetchWishlist();
+    }
+  }, [isLoggedIn, fetchCart, fetchWishlist]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -49,6 +56,8 @@ export default function Header() {
     clearHomeCache();
     clearNewsCache();
     setIsUserMenuOpen(false);
+    fetchCart(); // Cập nhật giỏ hàng
+    fetchWishlist(); // Cập nhật wishlist
     navigate("/login");
   };
 
@@ -174,7 +183,7 @@ export default function Header() {
               </Link>
             )}
 
-            {/* User Menu */}
+             {/* User Menu */}
             {isLoggedIn && user ? (
               <div className="relative">
                 <Button

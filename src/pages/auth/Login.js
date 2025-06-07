@@ -5,12 +5,15 @@ import { Input } from "../../components/ui/Input";
 import { Checkbox } from "../../components/ui/Checkbox";
 import { Label } from "../../components/ui/Label";
 import Card, { CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "../../components/ui/Card";
-
 import { LOGIN, GET_PROFILE } from "../../api/apiService";
 import { toast } from "react-toastify";
+import { useCart } from "../../contexts/CartContext";
+import { useWishlist } from "../../contexts/WishlistContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { fetchCart } = useCart();
+  const { fetchWishlist } = useWishlist();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -38,6 +41,8 @@ export default function Login() {
       const profileResponse = await GET_PROFILE();
       
       toast.success("Đăng nhập thành công!");
+      fetchCart(); // Cập nhật giỏ hàng
+      fetchWishlist(); // Cập nhật wishlist
 
       // Kiểm tra vai trò của người dùng
       const roles = profileResponse.roles || [];
@@ -45,7 +50,7 @@ export default function Login() {
 
       // Điều hướng dựa trên vai trò
       if (isAdmin) {
-        window.location.href = "/";// Chuyển hướng đến localhost:5173 nếu là ADMIN
+        window.location.href = "/"; // Chuyển hướng đến localhost:5173 nếu là ADMIN
       } else {
         navigate("/"); // Chuyển hướng đến trang chủ nếu không phải ADMIN
       }
