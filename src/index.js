@@ -27,6 +27,8 @@ import PrivacyPolicyPage from './pages/policy/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/policy/TermsOfServicePage';
 import ReturnPolicyPage from './pages/policy/ReturnPolicyPage';
 import UnauthorizedPage from './pages/auth/UnauthorizedPage';
+import NotFoundPage from './pages/NotFoundPage';
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -50,7 +52,7 @@ const router = createBrowserRouter([
         path: "/product/:id",
         element: <ProductDetail />,
       },
-       {
+      {
         path: "/products",
         element: <ProductsPage />,
       },
@@ -124,7 +126,10 @@ const router = createBrowserRouter([
         element: <UnauthorizedPage />,
       },
     ],
-
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
 

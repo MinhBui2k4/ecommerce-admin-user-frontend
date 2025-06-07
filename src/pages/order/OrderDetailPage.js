@@ -328,7 +328,7 @@ export default function OrderDetailPage() {
                     <p style={{ fontSize: "14px", color: "#6B7280" }}>SL: {item.quantity}</p>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <p style={{ fontSize: "16px", fontWeight: "500" }}>
+                    <p style={{ fontSize: "20px", fontWeight: "500" }}>
                       {formatPrice(item.price * item.quantity)}
                     </p>
                   </div>

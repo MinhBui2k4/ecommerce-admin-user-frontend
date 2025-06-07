@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GET_USER_ORDERS, GET_ORDERS_BY_STATUS } from "../../api/apiService";
+import { GET_USER_ORDERS, GET_ORDERS_BY_STATUS_AND_USERID, GET_PROFILE } from "../../api/apiService";
 import { toast } from "react-toastify";
 
 export default function OrderHistoryPage() {
@@ -23,6 +23,7 @@ export default function OrderHistoryPage() {
     COMPLETED: 0,
     CANCELLED: 0,
   });
+  const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
 
   const formatPrice = (price) => {
@@ -51,7 +52,7 @@ export default function OrderHistoryPage() {
     }
   };
 
-  // Lấy số lượng đơn hàng cho từng trạng thái
+  // Lấy userId từ profile
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -60,15 +61,34 @@ export default function OrderHistoryPage() {
       return;
     }
 
+    GET_PROFILE()
+      .then((profile) => {
+        if (profile && profile.id) {
+          setUserId(profile.id);
+        } else {
+          throw new Error("Không thể lấy thông tin người dùng");
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch user profile:", error);
+        toast.error("Không thể lấy thông tin người dùng");
+        navigate("/login");
+      });
+  }, [navigate]);
+
+  // Lấy số lượng đơn hàng cho từng trạng thái
+  useEffect(() => {
+    if (!userId) return;
+
     const fetchStatusCounts = async () => {
       try {
         const statuses = ["ORDERED", "CONFIRMED", "PROCESSING", "SHIPPED", "COMPLETED", "CANCELLED"];
-        const params = { page: 0, size: 1 }; // Chỉ lấy 1 kết quả để biết totalElements
+        const params = { page: 0, size: 1 }; // Chỉ take 1 result to get totalElements
 
         // Gọi API cho từng trạng thái
         const counts = await Promise.all(
           statuses.map(async (status) => {
-            const response = await GET_ORDERS_BY_STATUS(status, params);
+            const response = await GET_ORDERS_BY_STATUS_AND_USERID(userId, status, params);
             return { status, count: response.totalElements || 0 };
           })
         );
@@ -90,13 +110,15 @@ export default function OrderHistoryPage() {
     };
 
     fetchStatusCounts();
-  }, [navigate]);
+  }, [userId]);
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageNumber: 0 }));
   }, [currentTab]);
 
   useEffect(() => {
+    if (!userId) return;
+
     const token = localStorage.getItem("authToken");
     if (!token) {
       toast.error("Vui lòng đăng nhập để xem đơn hàng");
@@ -114,7 +136,7 @@ export default function OrderHistoryPage() {
 
     const fetchOrders = currentTab === "all"
       ? GET_USER_ORDERS(params)
-      : GET_ORDERS_BY_STATUS(currentTab.toUpperCase(), params);
+      : GET_ORDERS_BY_STATUS_AND_USERID(userId, currentTab.toUpperCase() ,params);
 
     fetchOrders
       .then((response) => {
@@ -137,7 +159,7 @@ export default function OrderHistoryPage() {
         setPagination((prev) => ({ ...prev, totalElements: 0, totalPages: 1 }));
         setLoading(false);
       });
-  }, [currentTab, pagination.pageNumber, navigate]);
+  }, [currentTab, pagination.pageNumber, userId, navigate]);
 
   const handlePageChange = (pageNumber) => {
     setPagination((prev) => ({ ...prev, pageNumber: pageNumber - 1 }));

@@ -46,20 +46,6 @@ export default function PaymentMethods({ selectedMethod, onMethodChange }) {
                     </Label>
                 </div>
             ))}
-            <div className="flex items-center space-x-2 rounded-md border p-4">
-                <input
-                    type="radio"
-                    id="payment-cod"
-                    name="payment"
-                    value="cod"
-                    checked={selectedMethod === "cod"}
-                    onChange={handlePaymentChange}
-                    className="h-4 w-4 text-blue-600"
-                />
-                <Label htmlFor="payment-cod" className="flex-1 font-medium">
-                    Thanh toán khi nhận hàng (COD)
-                </Label>
-            </div>
         </div>
     );
 }

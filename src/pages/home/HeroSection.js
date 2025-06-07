@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "../../components/ui/Button";
 import { GET_HERO_SECTIONS } from "../../api/apiService";
 import { getCachedHeroSlides } from "../../utils/homeCache";
 
@@ -19,11 +18,7 @@ export default function HeroSection() {
         setSlides([
           {
             id: 1,
-            title: "Khám phá công nghệ đỉnh cao",
-            description: "Trải nghiệm sản phẩm mới nhất",
             image: "/images/hero-placeholder.jpg",
-            cta: "Mua ngay",
-            link: "/products",
           },
         ]);
       } finally {
@@ -47,15 +42,6 @@ export default function HeroSection() {
     return (
       <section className="w-full relative h-[500px] md:h-[600px] overflow-hidden animate-pulse">
         <div className="absolute inset-0 bg-gray-200"></div>
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full container mx-auto px-4">
-            <div className="max-w-xl">
-              <div className="h-12 bg-gray-300 rounded mb-4 w-3/4"></div>
-              <div className="h-6 bg-gray-300 rounded mb-8 w-1/2"></div>
-              <div className="h-10 bg-gray-300 rounded w-32"></div>
-            </div>
-          </div>
-        </div>
       </section>
     );
   }
@@ -70,45 +56,24 @@ export default function HeroSection() {
           }`}
         >
           <div className="relative h-full w-full">
-            <img
-              src={slide.image}
-              alt={slide.title}
-              className="object-cover w-full h-full"
-              loading="eager"
-              onError={(e) => {
-                e.target.onerror = null; // Prevent infinite loop
-                e.target.src = "/images/hero-placeholder.jpg";
-              }}
-              style={{
-                objectFit: "cover",
-                imageRendering: "auto",
-                maxWidth: "100%",
-                height: "100%"
-              }}
-            />
-            <div className="absolute inset-0 bg-black/40">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full container mx-auto px-4">
-                  <div
-                    className={`max-w-xl text-white animate-slide-up`}
-                    style={{
-                      animation:
-                        index === currentSlide ? "slideUp 0.8s ease-in-out" : "none",
-                    }}
-                  >
-                    <h1 className="mb-4 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
-                      {slide.title}
-                    </h1>
-                    <p className="mb-8 text-lg md:text-xl">{slide.description}</p>
-                    <Link to={slide.link}>
-                      <Button size="lg" className="font-medium px-8 py-3">
-                        {slide.cta}
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Link to="/products">
+              <img
+                src={slide.image}
+                alt="Hero Slide"
+                className="object-contain w-full h-full"
+                loading="eager"
+                onError={(e) => {
+                  e.target.onerror = null; // Prevent infinite loop
+                  e.target.src = "/images/hero-placeholder.jpg";
+                }}
+                style={{
+                  objectFit: "contain", // Đảm bảo ảnh hiển thị đầy đủ
+                  imageRendering: "auto",
+                  maxWidth: "100%",
+                  height: "100%",
+                }}
+              />
+            </Link>
           </div>
         </div>
       ))}
@@ -126,24 +91,6 @@ export default function HeroSection() {
           />
         ))}
       </div>
-
-      {/* Inline animation style */}
-      <style jsx="true">{`
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-slide-up {
-          animation-fill-mode: forwards;
-        }
-      `}</style>
     </section>
   );
 }
