@@ -115,7 +115,6 @@ export default function ProfilePage() {
     }
   };
 
-
   const handleInfoSubmit = async (e) => {
     e.preventDefault();
     if (!userInfo.fullName || !userInfo.email) {
@@ -799,7 +798,10 @@ export default function ProfilePage() {
       </AlertDialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => {
+        setDeleteDialogOpen(open);
+        if (!open) setAddressToDelete(null);
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
@@ -808,7 +810,12 @@ export default function ProfilePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => {
+              setDeleteDialogOpen(false);
+              setAddressToDelete(null);
+            }}>
+              Hủy
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAddress}
               className="bg-red-500 hover:bg-red-600"
@@ -821,3 +828,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
