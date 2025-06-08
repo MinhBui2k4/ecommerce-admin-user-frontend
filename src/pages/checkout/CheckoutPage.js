@@ -53,7 +53,7 @@ export default function CheckoutPage() {
                 if (fetchedAddresses.length === 1) {
                     setSelectedAddress(fetchedAddresses[0].id.toString());
                 } else {
-                    const defaultAddress = fetchedAddresses.find((addr) => addr.isDefault);
+                    const defaultAddress = fetchedAddresses.find((addr) => addr.default === true);
                     setSelectedAddress(defaultAddress ? defaultAddress.id.toString() : null);
                 }
                 setLoading(false);
@@ -99,11 +99,11 @@ export default function CheckoutPage() {
 
     const handleAddAddress = (newAddress) => {
         setAddresses((prev) =>
-            newAddress.isDefault
-                ? [newAddress, ...prev.map((addr) => ({ ...addr, isDefault: false }))]
+            newAddress.default
+                ? [newAddress, ...prev.map((addr) => ({ ...addr, default: false }))]
                 : [...prev, newAddress]
         );
-        if (newAddress.isDefault || addresses.length === 0) {
+        if (newAddress.default || addresses.length === 0) {
             setSelectedAddress(newAddress.id.toString());
         }
         GET_USER_ADDRESSES({ pageNumber: 0, pageSize: 10 })
@@ -113,7 +113,7 @@ export default function CheckoutPage() {
                 if (fetchedAddresses.length === 1) {
                     setSelectedAddress(fetchedAddresses[0].id.toString());
                 } else {
-                    const defaultAddress = fetchedAddresses.find((addr) => addr.isDefault);
+                    const defaultAddress = fetchedAddresses.find((addr) => addr.default === true);
                     setSelectedAddress(defaultAddress ? defaultAddress.id.toString() : null);
                 }
             })
@@ -125,13 +125,13 @@ export default function CheckoutPage() {
 
     const handleUpdateAddress = (updatedAddress) => {
         setAddresses((prev) =>
-            updatedAddress.isDefault
+            updatedAddress.default
                 ? prev.map((addr) =>
-                    addr.id === updatedAddress.id ? updatedAddress : { ...addr, isDefault: false }
+                    addr.id === updatedAddress.id ? updatedAddress : { ...addr, default: false }
                 )
                 : prev.map((addr) => (addr.id === updatedAddress.id ? updatedAddress : addr))
         );
-        if (updatedAddress.isDefault) {
+        if (updatedAddress.default) {
             setSelectedAddress(updatedAddress.id.toString());
         }
         GET_USER_ADDRESSES({ pageNumber: 0, pageSize: 10 })
@@ -141,7 +141,7 @@ export default function CheckoutPage() {
                 if (fetchedAddresses.length === 1) {
                     setSelectedAddress(fetchedAddresses[0].id.toString());
                 } else {
-                    const defaultAddress = fetchedAddresses.find((addr) => addr.isDefault);
+                    const defaultAddress = fetchedAddresses.find((addr) => addr.default === true);
                     setSelectedAddress(defaultAddress ? defaultAddress.id.toString() : null);
                 }
             })
@@ -153,7 +153,7 @@ export default function CheckoutPage() {
 
     const handleDeleteAddress = (id) => {
         const addressToDelete = addresses.find((addr) => addr.id === id);
-        if (addressToDelete.isDefault) {
+        if (addressToDelete.default) {
             toast.error("Không thể xóa địa chỉ mặc định");
             return;
         }
@@ -163,7 +163,7 @@ export default function CheckoutPage() {
             if (remainingAddresses.length === 1) {
                 setSelectedAddress(remainingAddresses[0].id.toString());
             } else {
-                const defaultAddress = remainingAddresses.find((addr) => addr.isDefault);
+                const defaultAddress = remainingAddresses.find((addr) => addr.default === true);
                 setSelectedAddress(defaultAddress ? defaultAddress.id.toString() : null);
             }
         }
@@ -174,7 +174,7 @@ export default function CheckoutPage() {
                 if (fetchedAddresses.length === 1) {
                     setSelectedAddress(fetchedAddresses[0].id.toString());
                 } else {
-                    const defaultAddress = fetchedAddresses.find((addr) => addr.isDefault);
+                    const defaultAddress = fetchedAddresses.find((addr) => addr.default === true);
                     setSelectedAddress(defaultAddress ? defaultAddress.id.toString() : null);
                 }
             })
@@ -368,7 +368,7 @@ export default function CheckoutPage() {
                                                         {`${address.address}, ${address.ward}, ${address.district}, ${address.province}`}
                                                     </p>
                                                     <div className="mt-2 flex space-x-2">
-                                                        {address.isDefault && (
+                                                        {address.default && (
                                                             <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                                                                 Mặc định
                                                             </span>
