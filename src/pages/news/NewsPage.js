@@ -5,66 +5,57 @@ import { Button } from "../../components/ui/Button";
 import { GET_ALL_NEWS } from "../../api/apiService";
 import { getCachedNews } from "../../utils/newsCache";
 
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
 export default function NewsPage() {
   const [newsItems, setNewsItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pageNumber, setPageNumber] = useState(0);
   const [pagination, setPagination] = useState({
-    pageNumber: 0,
-    pageSize: 6,
+    pageSize: 5,
     totalElements: 0,
     totalPages: 1,
     lastPage: false,
   });
 
-  const fetchNews = useCallback(
-    debounce(async (pageNumber, pageSize) => {
-      try {
-        setLoading(true);
-        const response = await getCachedNews(GET_ALL_NEWS, { pageNumber, pageSize });
-        setNewsItems(
-          response.content.map((item) => ({
-            ...item,
-            author: "TechStore Editor", // Giả lập
-            category: "Công nghệ", // Giả lập
-            excerpt: item.content.slice(0, 100) + "...",
-            date: new Date(item.createdAt).toLocaleDateString("vi-VN"),
-          }))
-        );
-        setPagination({
-          pageNumber: response.pageNumber,
-          pageSize: response.pageSize,
-          totalElements: response.totalElements || response.content.length,
-          totalPages: response.totalPages,
-          lastPage: response.lastPage,
-        });
-      } catch (error) {
-        console.error("Failed to fetch news:", error);
-      } finally {
-        setLoading(false);
+  const fetchNews = useCallback(async (pageNumber, pageSize) => {
+    try {
+      setLoading(true);
+      const response = await getCachedNews(GET_ALL_NEWS, { pageNumber, pageSize });
+      console.log("API Response:", response);
+      if (!response.content) {
+        throw new Error("No content in API response");
       }
-    }, 500),
-    []
-  );
+      setNewsItems(
+        response.content.map((item) => ({
+          ...item,
+          author: "TechStore Editor",
+          category: "Công nghệ",
+          excerpt: item.content.slice(0, 100) + "...",
+          date: new Date(item.createdAt).toLocaleDateString("vi-VN"),
+        }))
+      );
+      setPagination({
+        pageNumber: response.pageNumber,
+        pageSize: response.pageSize,
+        totalElements: response.totalElements || 0,
+        totalPages: response.totalPages || 1,
+        lastPage: response.lastPage || true,
+      });
+    } catch (error) {
+      console.error("Failed to fetch news:", error);
+      setNewsItems([]);
+      setPagination((prev) => ({ ...prev, totalElements: 0, totalPages: 1, lastPage: true }));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchNews(pagination.pageNumber, pagination.pageSize);
-  }, [pagination.pageNumber, fetchNews]);
+    fetchNews(pageNumber, pagination.pageSize);
+  }, [pageNumber, fetchNews]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < pagination.totalPages) {
-      setPagination((prev) => ({ ...prev, pageNumber: newPage }));
+      setPageNumber(newPage);
     }
   };
 
@@ -110,7 +101,6 @@ export default function NewsPage() {
       <h1 className="mb-6 text-2xl font-bold md:text-3xl">Tin tức công nghệ</h1>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Main Content */}
         <div className="lg:col-span-2">
           <div className="space-y-6">
             {newsItems.length === 0 ? (
@@ -161,22 +151,21 @@ export default function NewsPage() {
               ))
             )}
           </div>
-          {/* Chỉ hiển thị phân trang khi có tin tức */}
-          {newsItems.length > 0 && (
+          {newsItems.length > 0 && pagination.totalPages > 1 && (
             <div className="mt-8 flex justify-center items-center space-x-4">
               <Button
-                onClick={() => handlePageChange(pagination.pageNumber - 1)}
-                disabled={pagination.pageNumber === 0}
+                onClick={() => handlePageChange(pageNumber - 1)}
+                disabled={pageNumber === 0}
                 className="disabled:opacity-50"
               >
                 Previous
               </Button>
               <span className="text-sm text-gray-600">
-                Trang {pagination.pageNumber + 1} / {pagination.totalPages} (Tổng {pagination.totalElements || 0} tin tức)
+                Trang {pageNumber + 1} / {pagination.totalPages} (Tổng {pagination.totalElements || 0} tin tức)
               </span>
               <Button
-                onClick={() => handlePageChange(pagination.pageNumber + 1)}
-                disabled={pagination.pageNumber >= pagination.totalPages - 1}
+                onClick={() => handlePageChange(pageNumber + 1)}
+                disabled={pageNumber >= pagination.totalPages - 1}
                 className="disabled:opacity-50"
               >
                 Next
@@ -185,9 +174,7 @@ export default function NewsPage() {
           )}
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Categories */}
           <Card>
             <CardContent className="p-4 md:p-6">
               <h3 className="mb-4 text-lg font-semibold md:text-xl">Danh mục</h3>
