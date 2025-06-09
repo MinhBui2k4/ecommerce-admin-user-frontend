@@ -105,7 +105,7 @@ export default function ProductGrid({ filters, sortBy, sortOrder, onTotalItemsCh
   const handlePageChange = (pageNumber) => {
     setPagination((prev) => ({ ...prev, pageNumber: pageNumber - 1 }));
     window.scrollTo({
-      top: document.getElementId("product-grid")?.offsetTop || 0,
+      top: document.getElementById("product-grid")?.offsetTop || 0,
       behavior: "smooth",
     });
   };
