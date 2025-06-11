@@ -183,7 +183,7 @@ export default function NewsPage() {
                   (category, index) => (
                     <Link
                       key={index}
-                      to={`/news`}
+                      // to={`/news`}
                       // to={`/news/category/${category.toLowerCase().replace(/\s+/g, "-")}`}
                       className="block rounded-md px-3 py-2 text-sm hover:bg-gray-100"
                     >

@@ -74,8 +74,7 @@ export default function CheckoutPage() {
     }, [setSelectedItems]);
 
     useEffect(() => {
-        // Xử lý callback MoMo
-        if (isCallbackProcessed) return; // Ngăn chặn xử lý nếu đã xử lý trước đó
+        if (isCallbackProcessed) return; 
 
         const query = new URLSearchParams(location.search);
         const orderId = query.get("orderId");
@@ -86,7 +85,6 @@ export default function CheckoutPage() {
             GET_MOMO_PAYMENT_STATUS(momoOrderId)
                 .then((response) => {
                     if (resultCode === "0" && response.content.status === "success") {
-                        // Chỉ hiển thị thông báo một lần
                         if (!isCallbackProcessed) {
                             toast.success("Thanh toán MoMo thành công!");
                         }
@@ -102,7 +100,7 @@ export default function CheckoutPage() {
                         toast.error("Thanh toán MoMo thất bại: " + (response.content.message || "Lỗi không xác định"));
                         navigate("/checkout");
                     }
-                    setIsCallbackProcessed(true); // Đánh dấu đã xử lý
+                    setIsCallbackProcessed(true); 
                     localStorage.removeItem("momoOrderId");
                     localStorage.removeItem("momoOriginalOrderId");
                 })
@@ -112,7 +110,7 @@ export default function CheckoutPage() {
                     localStorage.removeItem("momoOrderId");
                     localStorage.removeItem("momoOriginalOrderId");
                     navigate("/checkout");
-                    setIsCallbackProcessed(true); // Đánh dấu đã xử lý
+                    setIsCallbackProcessed(true); 
                 });
         }
     }, [location, selectedItems, setCartItems, setDetailedItems, clearSelectedItems, fetchCart, navigate, isCallbackProcessed]);
