@@ -6,7 +6,7 @@ import { GET_NEWS_BY_ID, GET_ALL_NEWS } from "../../api/apiService";
 import { getCachedNews, getCachedNewsById } from "../../utils/newsCache";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-
+import UserEditer from "../../assets/images/icon_user_editer.png";
 export default function NewsDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -222,14 +222,14 @@ export default function NewsDetailPage() {
             <CardContent className="p-4 md:p-6">
               <div className="flex items-center space-x-4">
                 <div className="relative h-16 w-16 overflow-hidden rounded-full">
-                  {/* <img
-                    src="/images/author-placeholder.jpg"
+                  <img
+                    src={UserEditer}
                     alt={news.author}
                     className="object-cover w-full h-full"
                     onError={(e) => {
                       e.target.src = "/images/placeholder.jpg";
                     }}
-                  /> */}
+                  />
                 </div>
                 <div>
                   <h3 className="font-semibold">{news.author}</h3>

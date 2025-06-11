@@ -173,7 +173,7 @@ export default function Register() {
 
             <div className="grid grid-cols-2 gap-4">
               <Button variant="outline" className="w-full">
-                <span className="mr-2 text-red-600">F</span>
+                <span className="mr-2 text-blue-600">F</span>
                 Facebook
               </Button>
               <Button variant="outline" className="w-full">

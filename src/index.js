@@ -108,6 +108,10 @@ const router = createBrowserRouter([
       {
         path: "/checkout",
         element: <CheckoutPage />,
+      }, // Checkout
+      {
+        path: "/checkout/success",
+        element: <CheckoutPage />,
       },
       // Policy
       {
