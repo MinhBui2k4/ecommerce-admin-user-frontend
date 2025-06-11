@@ -12,7 +12,7 @@ export default function MoMoReturnPage() {
         const originalOrderId = localStorage.getItem("momoOriginalOrderId");
 
         if (resultCode === "0") {
-            toast.success("Thanh toán MoMo thành công!");
+            // toast.success("Thanh toán MoMo thành công!");
             navigate(`/orders/${originalOrderId}`); // Điều hướng đến orderId gốc
             localStorage.removeItem("momoOriginalOrderId"); // Xóa sau khi sử dụng
         } else {

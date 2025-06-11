@@ -192,12 +192,17 @@ export function REMOVE_FROM_WISHLIST(productId) {
 }
 
 
-// New MoMo Payment API
+
+// MoMo Payment API
 export function CREATE_MOMO_PAYMENT(orderId, orderInfo, amount) {
     const data = {
         orderId: orderId.toString(),
         orderInfo,
-        amount
+        amount,
     };
     return callApi("/payment/momo/create", "POST", data, null, true);
+}
+
+export function GET_MOMO_PAYMENT_STATUS(momoOrderId) {
+    return callApi(`/payment/momo/check/${momoOrderId}`, "GET", null, null, true);
 }

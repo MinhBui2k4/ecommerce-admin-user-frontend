@@ -6,7 +6,7 @@ import { Label } from "../../components/ui/Label";
 import { Textarea } from "../../components/ui/Textarea";
 import { Separator } from "../../components/ui/Separator";
 import { useCart } from "../../contexts/CartContext";
-import { GET_USER_ADDRESSES, CREATE_ORDER, REMOVE_FROM_CART, CREATE_MOMO_PAYMENT } from "../../api/apiService";
+import { GET_USER_ADDRESSES, CREATE_ORDER, REMOVE_FROM_CART, CREATE_MOMO_PAYMENT, GET_MOMO_PAYMENT_STATUS, GET_PROFILE } from "../../api/apiService";
 import { toast } from "react-toastify";
 import AddressForm from "./AddressForm";
 import AddressActions from "./AddressActions";
@@ -22,6 +22,7 @@ export default function CheckoutPage() {
     const [shippingMethod, setShippingMethod] = useState("standard");
     const [orderNotes, setOrderNotes] = useState("");
     const [loading, setLoading] = useState(true);
+    const [isCallbackProcessed, setIsCallbackProcessed] = useState(false); // Cờ để tránh lặp lại
 
     const formatPrice = (price) => {
         if (!price || isNaN(price)) return "0 ₫";
@@ -73,29 +74,48 @@ export default function CheckoutPage() {
     }, [setSelectedItems]);
 
     useEffect(() => {
-        // Handle MoMo callback
+        // Xử lý callback MoMo
+        if (isCallbackProcessed) return; // Ngăn chặn xử lý nếu đã xử lý trước đó
+
         const query = new URLSearchParams(location.search);
         const orderId = query.get("orderId");
         const resultCode = query.get("resultCode");
-        if (orderId && resultCode) {
-            localStorage.removeItem("momoOriginalOrderId");
-            localStorage.removeItem("momoTransactionId");
-            if (resultCode === "0") {
-                toast.success("Thanh toán MoMo thành công!");
-                for (const id of selectedItems) {
-                    REMOVE_FROM_CART(id).catch((error) => console.error("Failed to remove cart item:", error));
-                }
-                setCartItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
-                setDetailedItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
-                clearSelectedItems();
-                fetchCart();
-                navigate(`/orders/${orderId}`);
-            } else {
-                toast.error("Thanh toán MoMo thất bại. Vui lòng thử lại với đơn hàng mới.");
-                navigate("/checkout");
-            }
+        const momoOrderId = localStorage.getItem("momoOrderId");
+
+        if (orderId && resultCode && momoOrderId) {
+            GET_MOMO_PAYMENT_STATUS(momoOrderId)
+                .then((response) => {
+                    if (resultCode === "0" && response.content.status === "success") {
+                        // Chỉ hiển thị thông báo một lần
+                        if (!isCallbackProcessed) {
+                            toast.success("Thanh toán MoMo thành công!");
+                        }
+                        for (const id of selectedItems) {
+                            REMOVE_FROM_CART(id).catch((error) => console.error("Failed to remove cart item:", error));
+                        }
+                        setCartItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
+                        setDetailedItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
+                        clearSelectedItems();
+                        fetchCart();
+                        navigate(`/orders/${response.content.orderId}`);
+                    } else {
+                        toast.error("Thanh toán MoMo thất bại: " + (response.content.message || "Lỗi không xác định"));
+                        navigate("/checkout");
+                    }
+                    setIsCallbackProcessed(true); // Đánh dấu đã xử lý
+                    localStorage.removeItem("momoOrderId");
+                    localStorage.removeItem("momoOriginalOrderId");
+                })
+                .catch((error) => {
+                    console.error("Lỗi xác nhận giao dịch MoMo:", error);
+                    toast.error("Lỗi xác nhận thanh toán. Vui lòng thử lại.");
+                    localStorage.removeItem("momoOrderId");
+                    localStorage.removeItem("momoOriginalOrderId");
+                    navigate("/checkout");
+                    setIsCallbackProcessed(true); // Đánh dấu đã xử lý
+                });
         }
-    }, [location, selectedItems, setCartItems, setDetailedItems, clearSelectedItems, fetchCart, navigate]);
+    }, [location, selectedItems, setCartItems, setDetailedItems, clearSelectedItems, fetchCart, navigate, isCallbackProcessed]);
 
     const handleAddAddress = (newAddress) => {
         setAddresses((prev) =>
@@ -214,12 +234,13 @@ export default function CheckoutPage() {
                     quantity: item.quantity,
                 }));
 
-            // TODO: Replace with actual userId from token
-            const userId = 1; // Decode JWT token to get userId
+            const profile = await GET_PROFILE();
+            const userId = profile.id;
+
             const orderData = {
                 userId,
                 shippingCost: shipping,
-                paymentMethodId: paymentMethod === "cod" ? 1 : 2, // 1: COD, 2: MoMo
+                paymentMethodId: paymentMethod === "cod" ? 1 : 2,
                 shippingAddressId: parseInt(selectedAddress),
                 items,
             };
@@ -236,10 +257,10 @@ export default function CheckoutPage() {
                 );
                 if (momoResponse.content && momoResponse.content.payUrl) {
                     localStorage.setItem("momoOriginalOrderId", momoResponse.content.originalOrderId);
-                    localStorage.setItem("momoTransactionId", momoResponse.content.transactionId);
+                    localStorage.setItem("momoOrderId", momoResponse.content.momoOrderId);
                     window.location.href = momoResponse.content.payUrl;
                 } else {
-                    throw new Error(momoResponse.message || "Failed to get MoMo payment URL");
+                    throw new Error(momoResponse.message || "Không thể lấy URL thanh toán MoMo");
                 }
             } else {
                 for (const id of selectedItems) {
@@ -253,7 +274,7 @@ export default function CheckoutPage() {
                 navigate(`/orders/${order.id}`);
             }
         } catch (error) {
-            console.error("Order submission error:", error);
+            console.error("Lỗi gửi đơn hàng:", error);
             if (error.response?.status === 401) {
                 toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
                 navigate("/login");
@@ -262,6 +283,9 @@ export default function CheckoutPage() {
                 navigate("/cart");
             } else if (error.response?.data?.message.includes("Data truncation")) {
                 toast.error("Lỗi hệ thống khi xử lý thanh toán. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.");
+                navigate("/cart");
+            } else if (error.response?.data?.message.includes("duplicated orderId")) {
+                toast.error("Lỗi: Mã giao dịch trùng lặp. Vui lòng thử lại với đơn hàng mới.");
                 navigate("/cart");
             } else {
                 toast.error("Không thể đặt đơn hàng: " + (error.response?.data?.message || error.message));
